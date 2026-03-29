@@ -6,6 +6,7 @@
 #include <thread>
 #include <sstream>
 #include <atomic>
+#include <condition_variable>
 
 namespace vtb {
 
@@ -32,13 +33,16 @@ private:
 
    void flush_loop();
 
-   LogLevel level_;
    std::ofstream file_;
    std::stringstream buffer_;
    std::mutex mutex_;
    std::thread flush_thread_;
-   std::atomic<bool> running_;
-   std::atomic<bool> initialized_;
+
+   LogLevel level_{LogLevel::DEFAULT};
+   std::atomic<bool> running_{false};
+   std::atomic<bool> initialized_{false};
+
+   std::condition_variable cv_;
 };
 
 }

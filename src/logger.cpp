@@ -9,7 +9,7 @@ Logger& Logger::get_instance() {
    return instance;
 }
 
-Logger::Logger() : level_(LogLevel::DEFAULT), running_(false), initialized_(false) {
+Logger::Logger() {
 }
 
 void Logger::init(const std::string& filename, LogLevel level) {
@@ -37,11 +37,19 @@ void Logger::log(LogLevel msg_level, const std::string& message) {
 
 void Logger::flush_loop() {
    while (running_) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      {
+         std::unique_lock<std::mutex> lock(mutex_);
+         // This waits for 100ms OR until cv_.notify_all() is called
+         cv_.wait_for(lock, std::chrono::milliseconds(100), [this] { 
+            return !running_; 
+         });
+      }
 
       std::string to_write; {
          std::lock_guard<std::mutex> lock(mutex_);
-         to_write = buffer_.str();
+         to_write = buffer_.str(); 
+         // CHECK: us move instead of copy? OR swap
+         // to_write.swap(active_buffer_);
          buffer_.str("");
          buffer_.clear();
       }
@@ -69,6 +77,7 @@ void Logger::flush_loop() {
 
 Logger::~Logger() {
    running_ = false;
+   cv_.notify_all(); // Wakes the thread up INSTANTLY
    if (flush_thread_.joinable()) {
       flush_thread_.join();
    }

@@ -18,47 +18,6 @@ void CmdlineParser::add_argument(
        std::string(default_v)});
 }
 
-// void CmdlineParser::parse(int argc, char** argv) {
-//    int start_index = argc;
-//    for (int i = 1; i < argc; ++i) {
-//       if (std::string_view(argv[i]) == "--") {
-//          start_index = i + 1;
-//          break;
-//       }
-//    }
-// 
-//    for (int i = start_index; i < argc; ++i) {
-//       std::string_view token(argv[i]);
-//       bool matched = false;
-//       for (auto& arg : arguments_) {
-//          if (token == arg.long_name || token == arg.short_name) {
-//             arg.found = true;
-//             matched = true;
-//             if (i + 1 < argc && argv[i+1][0] != '-') {
-//                arg.value = argv[++i];
-//             } else if (arg.required && arg.value.empty()) {
-//                throw std::runtime_error(
-//                   "CmdlineArgumentFormat "
-//                   + std::string(token)
-//                   + " requires a value.");
-//             }
-//             break;
-//          }
-//       }
-//       if (!matched)
-//          throw std::runtime_error(
-//             "Unknown argument '"
-//             + std::string(token) + "'");
-//    }
-// 
-//    for (const auto& arg : arguments_) {
-//       if (arg.required && !arg.found)
-//          throw std::runtime_error(
-//             "Required argument missing: "
-//             + arg.long_name);
-//    }
-// }
-
 void CmdlineParser::parse(int argc, char** argv) {
    int start_index = argc;
    bool separator_found = false;

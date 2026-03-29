@@ -16,28 +16,31 @@ namespace vtb {
 
 #define RTE_LOGTYPE_VLOOP RTE_LOGTYPE_USER1
 
+uint32_t VhostController::MBUF_POOL_SIZE = 8191;
+uint32_t VhostController::MBUF_CACHE_SIZE = 256;
+uint16_t VhostController::PKT_BURST_SZ = 32;
+uint16_t VhostController::VIRTIO_RXQ = 0;
+uint16_t VhostController::VIRTIO_TXQ = 1;
+uint32_t VhostController::RING_SIZE = 4096;
+uint32_t VhostController::MAX_ENQUEUE_RETRIES = 1000;
+
 // ------------------------------------------------------------------
 // Static instance pointer (supports one backend per process)
 // ------------------------------------------------------------------
-std::atomic<VhostController*>
-   VhostController::instance_{nullptr};
+std::atomic<VhostController*> VhostController::instance_{nullptr};
 
 // ------------------------------------------------------------------
 // Construction / destruction
 // ------------------------------------------------------------------
-VhostController::VhostController(std::string socket_path)
-   : socket_path_(std::move(socket_path)) {
+VhostController::VhostController(std::string socket_path) : socket_path_{std::move(socket_path)} {
    VhostController* expected = nullptr;
-   if (!instance_.compare_exchange_strong(
-         expected, this,
-         std::memory_order_acq_rel))
-      throw std::runtime_error(
-         "only one VhostController instance allowed");
+
+   if (!instance_.compare_exchange_strong(expected, this, std::memory_order_acq_rel)) {
+      throw std::runtime_error("only one VhostController instance allowed");
+   }
 }
 
 VhostController::~VhostController() {
-   stop();
-
    if (driver_registered_)
       rte_vhost_driver_unregister(socket_path_.c_str());
    if (ring_)
@@ -80,13 +83,12 @@ void VhostController::init(int argc, char* argv[]) {
 void VhostController::start() {
    const char* path = socket_path_.c_str();
 
-   if (rte_vhost_driver_register(path, 0) != 0)
-      throw std::runtime_error(
-         "vhost driver register failed: "
-         + socket_path_);
+   if (rte_vhost_driver_register(path, 0) != 0) {
+      throw std::runtime_error("vhost driver register failed: " + socket_path_);
+   }
    driver_registered_ = true;
 
-   rte_vhost_driver_disable_features(path, 1ULL << VIRTIO_NET_F_MQ);
+   rte_vhost_driver_disable_features(path, 1ULL << VIRTIO_NET_F_MQ); // CHECK
    rte_vhost_driver_enable_features(path, 1ULL << VIRTIO_NET_F_MRG_RXBUF);
 
    static const struct rte_vhost_device_ops ops = {
@@ -100,11 +102,13 @@ void VhostController::start() {
       .guest_notify        = nullptr
    };
 
-   if (rte_vhost_driver_callback_register(path, &ops) != 0)
+   if (rte_vhost_driver_callback_register(path, &ops) != 0) {
       throw std::runtime_error("vhost callback register failed");
+   }
 
-   if (rte_vhost_driver_start(path) != 0)
+   if (rte_vhost_driver_start(path) != 0) {
       throw std::runtime_error("vhost driver start failed");
+   }
 
    RTE_LOG(INFO, VLOOP,
       "vhost-user backend ready on %s,"
@@ -115,21 +119,15 @@ void VhostController::start() {
 // run() — launches both threads and blocks until stop()
 // ------------------------------------------------------------------
 void VhostController::run() {
-   RTE_LOG(INFO, VLOOP,
-      "launching producer/consumer threads"
-      " (socket: %s)\n",
-      socket_path_.c_str());
-
-   RTE_LOG(INFO, VLOOP,
-      "shutdown complete -- rx: %"
-      PRIu64 " pkts, tx: %"
-      PRIu64 " pkts / %"
-      PRIu64 " bytes\n",
-      rx_pkts_, tx_pkts_, tx_bytes_);
+   // launch main to the first lcore
 }
 
-void VhostController::stop() {
-   quit_.store(true, std::memory_order_relaxed);
+int VhostController::vid() const {
+   return vid_;
+}
+
+bool VhostController::ready() const {
+   return ready_;
 }
 
 // ------------------------------------------------------------------
@@ -170,6 +168,10 @@ void VhostController::cb_destroy_device(int vid) {
 int VhostController::cb_vring_state_changed(int vid, uint16_t queue_id, int enable) {
    instance_.load(std::memory_order_acquire)->on_vring_state_changed(vid, queue_id, enable);
    return 0;
+}
+
+struct rte_mempool* VhostController::mbuf_pool() const {
+   return mbuf_pool_;
 }
 
 }
