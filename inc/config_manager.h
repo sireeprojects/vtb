@@ -42,6 +42,7 @@ public:
    }
 
    void dump_config();
+   void print_portmap();
 
    void init_vhost_device(int port_id, int vid, int nof_pairs);
    void set_queue_state(int port_id, uint16_t vring_id, bool enable);

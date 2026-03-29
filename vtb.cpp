@@ -110,5 +110,40 @@ int main(int argc, char** argv) {
    config.dump_config();
 
    vtb::info() << "Application Setup Complete.";
+
+
+   // 3. Populate Port Map (Simulating Device Connection)
+   // Port 0, Virtual ID 10, 2 Queue Pairs
+   int port_0 = 0;
+   int vid_0 = 10;
+   config.init_vhost_device(port_0, vid_0, 2);
+
+   // 4. Assign Socket FDs (Simulating backend connection)
+   // Assigning a dummy FD (e.g., 50) to the first queue pair
+   config.assign_port_socket(port_0, 0, 50);
+   
+   // 5. Assign Control Path
+   // Logical control ID 100
+   config.assign_control_path(port_0, 100);
+
+   // 6. Set Queue States (Simulating Vhost Handshake)
+   // Enable RX (0) and TX (1) for the first pair
+   config.set_queue_state(port_0, 0, true);
+   config.set_queue_state(port_0, 1, true);
+
+   // 7. Add a second port for comparison
+   config.init_vhost_device(1, 11, 1);
+   config.assign_port_socket(1, 0, 60);
+   config.assign_control_path(1, 101);
+
+   // 8. Final Output
+   vtb::info() << "Displaying Configured Port Map:";
+   config.print_portmap();
+
+   vtb::info() << "Demonstration Complete.";
+
+
+
+
    return 0;
 }

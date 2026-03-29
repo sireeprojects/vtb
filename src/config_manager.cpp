@@ -136,4 +136,46 @@ void ConfigManager::assign_control_path(int port_id, int ctl_fd) {
    }
 }
 
+void ConfigManager::print_portmap() {
+   std::lock_guard<std::mutex> lock(pmap_mutex_);
+
+   info() << "------------------------------------------------------------";
+   info() << std::left << std::setw(6)  << "Port"
+          << std::setw(6)  << "VID"
+          << std::setw(8)  << "Pairs"
+          << std::setw(15) << "Vhost (RX/TX)"
+          << "Port (RX/TX)";
+   info() << "------------------------------------------------------------";
+
+   for (const auto& [port_id, map] : pmap_) {
+      const auto& vd = map.vd;
+      const auto& pd = map.pd;
+
+      // Print main port info and the first queue pair
+      std::string vhost_q = std::to_string(vd.qp[0].rxq_id) + "/" +
+                            std::to_string(vd.qp[0].txq_id);
+      std::string port_q  = std::to_string(pd.qp[0].rxq_id) + "/" +
+                            std::to_string(pd.qp[0].txq_id);
+
+      info() << std::left << std::setw(6)  << port_id
+             << std::setw(6)  << vd.vid
+             << std::setw(8)  << vd.nof_queue_pairs
+             << std::setw(15) << vhost_q
+             << port_q;
+
+      // Print additional queue pairs if they exist
+      for (int i = 1; i < vd.nof_queue_pairs; ++i) {
+         std::string v_extra = std::to_string(vd.qp[i].rxq_id) + "/" +
+                               std::to_string(vd.qp[i].txq_id);
+         std::string p_extra = std::to_string(pd.qp[i].rxq_id) + "/" +
+                               std::to_string(pd.qp[i].txq_id);
+
+         info() << std::setw(20) << " " // Offset for Port/VID/Pairs columns
+                << std::setw(15) << v_extra
+                << p_extra;
+      }
+      info() << "------------------------------------------------------------";
+   }
+}
+
 } // namespace vtb
