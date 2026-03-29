@@ -18,7 +18,6 @@ int main(int argc, char** argv) {
 
    // 1. Setup Logger
    vtb::Logger::get_instance().init("dpdk_app.log", vtb::LogLevel::FULL);
-   vtb::info() << "Starting DPDK Application Environment...";
 
    //----------------------------------------------------------------
 
@@ -28,6 +27,8 @@ int main(int argc, char** argv) {
       vtb::error() << "Invalid command line arguments.";
       return -1;
    }
+
+   vtb::info() << "Starting DPDK Application Environment...";
 
    //----------------------------------------------------------------
 
@@ -106,7 +107,7 @@ int main(int argc, char** argv) {
    //----------------------------------------------------------------
 
    // 7. Final Debug Dump (Shows everything in the log)
-   // config.dump_config();
+   config.dump_config();
 
    vtb::info() << "Application Setup Complete.";
    return 0;
