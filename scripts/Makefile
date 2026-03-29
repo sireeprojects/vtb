@@ -1,0 +1,41 @@
+# Compiler and Flags
+CXX      := g++
+CXXFLAGS := -I../inc -Wall -Wextra -std=c++17 `pkg-config --cflags libdpdk`
+LDFLAGS  :=  `pkg-config --libs libdpdk` -pthread
+
+# Directories
+SRC_DIR  := ../src
+OBJ_DIR  := ../obj
+BIN_DIR  := ..
+
+# Target executable name
+TARGET   := $(BIN_DIR)/vtb_app
+
+# Find all .cpp files in src/ and the main vtb.cpp in root
+SRCS     := $(wildcard $(SRC_DIR)/*.cpp) ../vtb.cpp
+# Convert .cpp file paths to .o file paths in the obj/ directory
+OBJS     := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRCS)))
+
+# Default rule
+all: $(TARGET)
+
+# Link the executable
+$(TARGET): $(OBJS)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(OBJS) -o $(TARGET) $(LDFLAGS)
+
+# Compile source files from src/ into obj/
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Compile the main vtb.cpp (located in the parent root) into obj/
+$(OBJ_DIR)/vtb.o: ../vtb.cpp
+	@mkdir -p $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean up
+clean:
+	rm -rf $(OBJ_DIR) $(TARGET) *.log
+
+.PHONY: all clean
