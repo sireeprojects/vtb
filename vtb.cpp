@@ -57,8 +57,8 @@ int main(int argc, char** argv) {
    std::signal(SIGTERM, signal_handler);
 
    // vhost and eal messages to just errors
-   rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
-   rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
+   // rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
+   // rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
 
    const char* socket_path = "/tmp/vhost-user.sock";
 
@@ -68,6 +68,9 @@ int main(int argc, char** argv) {
 
    rte_eal_remote_launch(worker_thread, NULL, 2);
    rte_eal_mp_wait_lcore();
+
+   auto mode = config.get_arg<std::string>("--mode");
+   vtb::info() << "Mode=" << mode;
 
    // check vhost devices and queues for ports
    config.print_portmap();

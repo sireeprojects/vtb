@@ -14,17 +14,8 @@ ConfigManager::ConfigManager() {
       "--help", "-h",
       "Show this help menu", false, "false");
    parser_.add_argument(
-      "--portmask", "-p",
-      "Hex bitmask of ports", true, "0x0");
-   parser_.add_argument(
       "--mode", "-m",
-      "polling | interrupt", false, "polling");
-   parser_.add_argument(
-      "--burst", "-b",
-      "Packet burst size", false, "32");
-   parser_.add_argument(
-      "--promisc", "-P",
-      "Enable promiscuous mode", false, "false");
+      "Local | Emulator", false, "Local");
 }
 
 ConfigManager::~ConfigManager() {
