@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
    tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
 
    // Setup Logger
-   vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
+   vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
 
    auto& config = vtb::ConfigManager::get_instance();
    if (!config.init(argc, argv)) {
@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
       backend.start();
       rte_eal_remote_launch(worker_thread, NULL, 2);
       rte_eal_mp_wait_lcore();
+      config.print_portmap();
    } catch (const std::exception& e) {
       std::fprintf(stderr, "fatal: %s\n", e.what());
       return EXIT_FAILURE;

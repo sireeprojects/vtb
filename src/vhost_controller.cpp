@@ -19,6 +19,8 @@ namespace vtb {
 // Static instance pointer (supports one backend per process)
 std::atomic<VhostController*> VhostController::instance_{nullptr};
 
+int VhostController::port_cntr_ = 0;
+
 // Ctor
 VhostController::VhostController(std::string socket_path) : socket_path_{std::move(socket_path)} {
    VhostController* expected = nullptr;
@@ -116,6 +118,20 @@ int VhostController::cb_vring_state_changed(int vid, uint16_t queue_id, int enab
 //------------------------------------------------------------------
 void VhostController::on_new_device(int vid) {
    RTE_LOG(INFO, VHDEV, "new device vid=%d\n", vid);
+
+    int vring_count = rte_vhost_get_vring_num(vid);
+    vtb::details() << "Total Number of queues for " << vid << " is " << vring_count 
+       << " for with portnum " << VhostController::port_cntr_;
+
+    vtb::ConfigManager::get_instance().init_vhost_device(
+        VhostController::port_cntr_,
+        vid,
+        (vring_count/2)
+        );
+    vtb::ConfigManager::get_instance().set_queue_state(vid, 0, 1);
+    vtb::ConfigManager::get_instance().set_queue_state(vid, 1, 1);
+
+    VhostController::port_cntr_ ++;
 }
 
 void VhostController::on_destroy_device(int vid) {
@@ -125,6 +141,18 @@ void VhostController::on_destroy_device(int vid) {
 void VhostController::on_vring_state_changed(int vid, uint16_t queue_id, int enable) {
    RTE_LOG(INFO, VHDEV, "vring state changed vid=%d queue=%u enable=%d\n",
            vid, queue_id, enable);
+
+   vtb::details() << "vring state changed vid=" << vid
+                                    << "queue_id=" << queue_id
+                                    << "enable=" << enable;
+
+   vtb::ConfigManager::get_instance().set_queue_state(
+         vid,
+         queue_id,
+         enable
+         );
+
+
 }
 
 }

@@ -32,19 +32,13 @@ int main(int argc, char** argv) {
    struct termios old_t, new_t;
    tcgetattr(STDIN_FILENO, &old_t);
    new_t = old_t;
-
-   // 2. Hide the ^C (Disable ECHOCTL)
+   // Hide the ^C (Disable ECHOCTL)
    new_t.c_lflag &= ~ECHOCTL;
    tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
 
-   // 2. Adjust pointers to skip DPDK args and keep only App args (like -p)
-   // int app_argc = argc - eal_parsed;
-   // char** app_argv = argv + eal_parsed;
+   // Setup Logger
+   vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
 
-   // // 3. Setup Logger
-   vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
-
-   // // 4. Pass ONLY the application arguments to ConfigManager
    auto& config = vtb::ConfigManager::get_instance();
    if (!config.init(argc, argv)) {
       return -1;
@@ -53,12 +47,22 @@ int main(int argc, char** argv) {
    std::signal(SIGINT,  signal_handler);
    std::signal(SIGTERM, signal_handler);
 
+   rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
+   rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
+
    try {
       VhostController backend(socket_path);
       backend.init(argc, argv);
+
+      // int vhost_logtype = rte_log_register("lib.vhost.config");
+      // rte_log_set_level(vhost_logtype, RTE_LOG_ERR);
+
       backend.start();
       rte_eal_remote_launch(worker_thread, NULL, 2);
       rte_eal_mp_wait_lcore();
+
+      config.print_portmap();
+
    } catch (const std::exception& e) {
       std::fprintf(stderr, "fatal: %s\n", e.what());
       return EXIT_FAILURE;

@@ -51,6 +51,8 @@ private:
    bool eal_initialised_{false};
    bool driver_registered_{false};
    static std::atomic<VhostController*> instance_;
+
+   static int port_cntr_;
 };
 
 }
