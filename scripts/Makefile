@@ -38,4 +38,7 @@ $(OBJ_DIR)/vtb.o: ../vtb.cpp
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET) *.log
 
+run:
+	../vtb_app -l 10-11 -n 1 --no-telemetry -- -p 0xFF
+
 .PHONY: all clean
