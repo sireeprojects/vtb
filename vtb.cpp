@@ -6,61 +6,65 @@
 
 #include <csignal>
 
+#include <termios.h>
+#include <unistd.h>
+
 using namespace vtb;
 
-static VhostController* g_backend = nullptr;
-
-// const char* socket_path = "/tmp/vhost-user.sock";
 bool stop_blocking_{false};
 
 static void signal_handler(int) {
-   vtb::info() << "Something Bad happened!";
-   // rte_vhost_driver_unregister(socket_path);
-   rte_vhost_driver_unregister("/tmp/vhost-user.sock");
-   rte_eal_cleanup();
+   vtb::info() << "User Interruption";
    stop_blocking_ = true;
 }
 
 static int worker_thread(void*) {
-    while (1) {
-        // This is where your future rx/tx logic will go
+    while (!stop_blocking_) {
         rte_pause();
     }
     return 0;
 }
 
 int main(int argc, char** argv) {
-
    const char* socket_path = "/tmp/vhost-user.sock";
 
-   // 1. Setup Logger
+   // 1. Get current terminal settings
+   struct termios old_t, new_t;
+   tcgetattr(STDIN_FILENO, &old_t);
+   new_t = old_t;
+
+   // 2. Hide the ^C (Disable ECHOCTL)
+   new_t.c_lflag &= ~ECHOCTL;
+   tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
+
+   // 2. Adjust pointers to skip DPDK args and keep only App args (like -p)
+   // int app_argc = argc - eal_parsed;
+   // char** app_argv = argv + eal_parsed;
+
+   // // 3. Setup Logger
    vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
 
-   // 2. Initialize ConfigManager and parse CLI
-   auto& config = vtb::ConfigManager::get_instance();
-   if (!config.init(argc, argv)) {
-      vtb::error() << "Invalid command line arguments.";
-      return -1;
-   }
-   vtb::info() << "Starting DPDK Application Environment...";
+   // // 4. Pass ONLY the application arguments to ConfigManager
+   // auto& config = vtb::ConfigManager::get_instance();
+   // if (!config.init(app_argc, app_argv)) {
+   //    return -1;
+   // }
+   //
+   std::signal(SIGINT,  signal_handler);
+   std::signal(SIGTERM, signal_handler);
 
    try {
       VhostController backend(socket_path);
-      g_backend = &backend;
-
-      std::signal(SIGINT,  signal_handler);
-      std::signal(SIGTERM, signal_handler);
-
       backend.init(argc, argv);
       backend.start();
-
+      rte_eal_remote_launch(worker_thread, NULL, 2);
+      rte_eal_mp_wait_lcore();
    } catch (const std::exception& e) {
       std::fprintf(stderr, "fatal: %s\n", e.what());
       return EXIT_FAILURE;
    }
 
-   rte_eal_remote_launch(worker_thread, NULL, 1);
-   rte_eal_mp_wait_lcore();
+   tcsetattr(STDIN_FILENO, TCSANOW, &old_t);
 
    vtb::info() << "Demonstration Complete.";
    return 0;

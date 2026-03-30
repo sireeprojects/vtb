@@ -29,11 +29,17 @@ VhostController::VhostController(std::string socket_path) : socket_path_{std::mo
 }
 
 VhostController::~VhostController() {
-   if (driver_registered_)
-      rte_vhost_driver_unregister(socket_path_.c_str());
+   vtb::info() << "Cleaning up Vhost Backend...";
 
-   if (eal_initialised_)
+   if (driver_registered_) {
+      rte_vhost_driver_unregister(socket_path_.c_str());
+      driver_registered_ = false;
+   }
+
+   if (eal_initialised_) {
       rte_eal_cleanup();
+      eal_initialised_ = false;
+   }
 
    instance_.store(nullptr, std::memory_order_release);
 }
