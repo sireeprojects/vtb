@@ -45,11 +45,11 @@ int main(int argc, char** argv) {
    vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
 
    // // 4. Pass ONLY the application arguments to ConfigManager
-   // auto& config = vtb::ConfigManager::get_instance();
-   // if (!config.init(app_argc, app_argv)) {
-   //    return -1;
-   // }
-   //
+   auto& config = vtb::ConfigManager::get_instance();
+   if (!config.init(argc, argv)) {
+      return -1;
+   }
+   
    std::signal(SIGINT,  signal_handler);
    std::signal(SIGTERM, signal_handler);
 
