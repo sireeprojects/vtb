@@ -10,18 +10,28 @@ using namespace vtb;
 
 static VhostController* g_backend = nullptr;
 
-const char* socket_path = "/tmp/vhost-user0";
+// const char* socket_path = "/tmp/vhost-user.sock";
 bool stop_blocking_{false};
 
 static void signal_handler(int) {
    vtb::info() << "Something Bad happened!";
-   rte_vhost_driver_unregister(socket_path);
+   // rte_vhost_driver_unregister(socket_path);
+   rte_vhost_driver_unregister("/tmp/vhost-user.sock");
    rte_eal_cleanup();
    stop_blocking_ = true;
 }
 
+static int worker_thread(void*) {
+    while (1) {
+        // This is where your future rx/tx logic will go
+        rte_pause();
+    }
+    return 0;
+}
 
 int main(int argc, char** argv) {
+
+   const char* socket_path = "/tmp/vhost-user.sock";
 
    // 1. Setup Logger
    vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
@@ -43,14 +53,14 @@ int main(int argc, char** argv) {
 
       backend.init(argc, argv);
       backend.start();
+
    } catch (const std::exception& e) {
       std::fprintf(stderr, "fatal: %s\n", e.what());
       return EXIT_FAILURE;
    }
 
-   while (!stop_blocking_) {
-      sleep(1);
-   }
+   rte_eal_remote_launch(worker_thread, NULL, 1);
+   rte_eal_mp_wait_lcore();
 
    vtb::info() << "Demonstration Complete.";
    return 0;

@@ -39,6 +39,6 @@ clean:
 	rm -rf $(OBJ_DIR) $(TARGET) *.log
 
 run:
-	../vtb_app -l 10-11 -n 1 --no-telemetry -- -p 0xFF
+	../vtb_app -l 1-2 --file-prefix=vhost_backend --no-pci -- -p 0xFF
 
 .PHONY: all clean
