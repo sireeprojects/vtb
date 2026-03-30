@@ -19,8 +19,7 @@ find_package(PkgConfig REQUIRED)
 
 # Force PkgConfig to look in custom install
 set(ENV{PKG_CONFIG_PATH}
-    "${DPDK_PATH}/lib/x86_64-linux-gnu/pkgconfig"
-    ":${DPDK_PATH}/lib/pkgconfig")
+    "${DPDK_PATH}/lib/x86_64-linux-gnu/pkgconfig")
 
 # We use 'IMPORTED_TARGET' which is a modern CMake feature that
 # bundles includes and library paths together automatically.

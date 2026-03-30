@@ -3,10 +3,12 @@ CXX      := g++
 CXXFLAGS := -I../inc -Wall -Wextra -std=c++17 `pkg-config --cflags libdpdk`
 LDFLAGS  :=  `pkg-config --libs libdpdk` -pthread
 
+PROJ_ROOT = /root/vtb/
+
 # Directories
-SRC_DIR  := ../src
-OBJ_DIR  := ../obj
-BIN_DIR  := ..
+SRC_DIR  := $(PROJ_ROOT)/src
+OBJ_DIR  := obj
+BIN_DIR  := .
 
 # Target executable name
 TARGET   := $(BIN_DIR)/vtb_app
@@ -39,7 +41,7 @@ clean:
 	rm -rf $(OBJ_DIR) $(TARGET) *.log
 
 run:
-	@../vtb_app -l 1-2 --file-prefix=vhost_backend --no-pci --no-telemetry \
+	@./vtb_app -l 1-2 --file-prefix=vhost_backend --no-pci --no-telemetry \
 	-- -p 0xFF
 
 .PHONY: all clean
