@@ -1,21 +1,31 @@
 #include "cmdline_parser.h"
 #include "config_manager.h"
 #include "vhost_controller.h"
+
 #include "logger.h"
 #include "messenger.h"
 
 #include <csignal>
-
 #include <termios.h>
 #include <unistd.h>
 
 using namespace vtb;
 
+static struct termios old_t, new_t;
 bool stop_blocking_{false};
 
-static void signal_handler(int) {
-   vtb::info() << "User Interruption";
-   stop_blocking_ = true;
+static void disable_echoctl() {
+   // Get current terminal settings
+   tcgetattr(STDIN_FILENO, &old_t);
+   new_t = old_t;
+
+   // Hide the ^C (Disable ECHOCTL)
+   new_t.c_lflag &= ~ECHOCTL;
+   tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
+}
+
+static void restore_echoctl() {
+   tcsetattr(STDIN_FILENO, TCSANOW, &old_t);
 }
 
 static int worker_thread(void*) {
@@ -25,48 +35,44 @@ static int worker_thread(void*) {
     return 0;
 }
 
+static void signal_handler(int) {
+   vtb::info() << "User Interruption";
+   stop_blocking_ = true;
+}
+
 int main(int argc, char** argv) {
-   const char* socket_path = "/tmp/vhost-user.sock";
+   disable_echoctl();
 
-   // 1. Get current terminal settings
-   struct termios old_t, new_t;
-   tcgetattr(STDIN_FILENO, &old_t);
-   new_t = old_t;
-   // Hide the ^C (Disable ECHOCTL)
-   new_t.c_lflag &= ~ECHOCTL;
-   tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
-
-   // Setup Logger
+   // setup logger
    vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
 
+   // setup configuration manager
    auto& config = vtb::ConfigManager::get_instance();
    if (!config.init(argc, argv)) {
       return -1;
    }
    
+   // assign signal handler for graceful exit
    std::signal(SIGINT,  signal_handler);
    std::signal(SIGTERM, signal_handler);
 
+   // vhost and eal messages to just errors
    rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
    rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
 
-   try {
-      VhostController backend(socket_path);
-      backend.init(argc, argv);
+   const char* socket_path = "/tmp/vhost-user.sock";
 
-      // int vhost_logtype = rte_log_register("lib.vhost.config");
-      // rte_log_set_level(vhost_logtype, RTE_LOG_ERR);
+   VhostController backend(socket_path);
+   backend.init(argc, argv);
+   backend.start();
 
-      backend.start();
-      rte_eal_remote_launch(worker_thread, NULL, 2);
-      rte_eal_mp_wait_lcore();
-      config.print_portmap();
-   } catch (const std::exception& e) {
-      std::fprintf(stderr, "fatal: %s\n", e.what());
-      return EXIT_FAILURE;
-   }
+   rte_eal_remote_launch(worker_thread, NULL, 2);
+   rte_eal_mp_wait_lcore();
 
-   tcsetattr(STDIN_FILENO, TCSANOW, &old_t);
+   // check vhost devices and queues for ports
+   config.print_portmap();
+
+   restore_echoctl();
 
    vtb::info() << "Demonstration Complete.";
    return 0;
