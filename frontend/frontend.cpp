@@ -22,6 +22,8 @@
 static volatile bool force_quit = false;
 static void signal_handler(int signum) { (void)signum; force_quit = true; }
 
+static constexpr int num_ports = 4;
+
 class CustomFrontend {
 public:
     CustomFrontend(int argc, char** argv) {
@@ -39,43 +41,59 @@ public:
                                              rte_socket_id());
         if (!mbuf_pool_) throw std::runtime_error("Mbuf Pool Allocation Failed");
 
-         std::cout << "DPDK Version: " << rte_version();
+         std::cout << "DPDK Version: " << rte_version() << std::endl;
 
         // 3. Initialize Port 0 (the vdev)
-        setup_port(0);
+        for (int i=0; i<num_ports; i++) {
+            setup_port(i);
+        }
     }
 
     void setup_port(uint16_t port_id) {
         struct rte_eth_conf port_conf;
         memset(&port_conf, 0, sizeof(struct rte_eth_conf));
 
+       uint16_t nb_rx=0;
+       uint16_t nb_tx=0;
+         
+        struct rte_eth_dev_info dev_info;
+        int ret = rte_eth_dev_info_get(port_id, &dev_info);
+        if (ret == 0) {
+           nb_rx = dev_info.max_rx_queues;
+           nb_tx = dev_info.max_tx_queues;
+           std::cout << "Port " << port_id << " has " << nb_rx << " RX queues." << std::endl;
+           std::cout << "Port " << port_id << " has " << nb_tx << " TX queues." << std::endl;
+        }  
+        int num_queues = nb_rx;
+
         // Configure with 1 RX and 1 TX queue
-        if (rte_eth_dev_configure(port_id, 3, 3, &port_conf) < 0)
+        if (rte_eth_dev_configure(port_id, num_queues, num_queues, &port_conf) < 0)
             throw std::runtime_error("Failed to configure port");
 
-        // Setup RX Queue 0
-        if (rte_eth_rx_queue_setup(port_id, 0, 1024, rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
-            throw std::runtime_error("Failed to setup RX queue");
+         for (int i=0; i<num_queues; i++) {
+            // Setup RX Queue 0
+            if (rte_eth_rx_queue_setup(port_id, i, 1024, rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
+                throw std::runtime_error("Failed to setup RX queue");
+            // Setup TX Queue 0
+            if (rte_eth_tx_queue_setup(port_id, i, 1024, rte_eth_dev_socket_id(port_id), NULL) < 0)
+                throw std::runtime_error("Failed to setup TX queue");
+         }
 
-        // Setup TX Queue 0
-        if (rte_eth_tx_queue_setup(port_id, 0, 1024, rte_eth_dev_socket_id(port_id), NULL) < 0)
-            throw std::runtime_error("Failed to setup TX queue");
-
-        // Setup RX Queue 1
-        if (rte_eth_rx_queue_setup(port_id, 1, 1024, rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
-            throw std::runtime_error("Failed to setup RX queue");
-
-        // Setup TX Queue 1
-        if (rte_eth_tx_queue_setup(port_id, 1, 1024, rte_eth_dev_socket_id(port_id), NULL) < 0)
-            throw std::runtime_error("Failed to setup TX queue");
-
-        // Setup RX Queue 2
-        if (rte_eth_rx_queue_setup(port_id, 2, 1024, rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
-            throw std::runtime_error("Failed to setup RX queue");
-
-        // Setup TX Queue 2
-        if (rte_eth_tx_queue_setup(port_id, 2, 1024, rte_eth_dev_socket_id(port_id), NULL) < 0)
-            throw std::runtime_error("Failed to setup TX queue");
+//        // Setup RX Queue 1
+//        if (rte_eth_rx_queue_setup(port_id, 1, 1024, rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
+//            throw std::runtime_error("Failed to setup RX queue");
+//
+//        // Setup TX Queue 1
+//        if (rte_eth_tx_queue_setup(port_id, 1, 1024, rte_eth_dev_socket_id(port_id), NULL) < 0)
+//            throw std::runtime_error("Failed to setup TX queue");
+//
+//        // Setup RX Queue 2
+//        if (rte_eth_rx_queue_setup(port_id, 2, 1024, rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
+//            throw std::runtime_error("Failed to setup RX queue");
+//
+//        // Setup TX Queue 2
+//        if (rte_eth_tx_queue_setup(port_id, 2, 1024, rte_eth_dev_socket_id(port_id), NULL) < 0)
+//            throw std::runtime_error("Failed to setup TX queue");
 
         // Start Port
         if (rte_eth_dev_start(port_id) < 0)

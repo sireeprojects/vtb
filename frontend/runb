@@ -1,2 +1,0 @@
-./backend -l 1-2 --file-prefix=vhost_backend --vdev='net_vhost0,iface=/tmp/vhost.sock,queues=1'
-#-l 1-2 --file-prefix=vhost_backend --vdev='net_vhost0,iface=/tmp/vhost.sock,queues=1'
