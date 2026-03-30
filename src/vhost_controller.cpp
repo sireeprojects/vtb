@@ -14,7 +14,7 @@
 
 namespace vtb {
 
-#define RTE_LOGTYPE_VLOOP RTE_LOGTYPE_USER1
+#define RTE_LOGTYPE_VHDEV RTE_LOGTYPE_USER1
 
 // Static instance pointer (supports one backend per process)
 std::atomic<VhostController*> VhostController::instance_{nullptr};
@@ -63,7 +63,7 @@ void VhostController::start() {
    }
    driver_registered_ = true;
 
-   rte_vhost_driver_disable_features(path, 1ULL << VIRTIO_NET_F_MQ); // CHECK
+   // rte_vhost_driver_disable_features(path, 1ULL << VIRTIO_NET_F_MQ); // CHECK
    rte_vhost_driver_enable_features(path, 1ULL << VIRTIO_NET_F_MRG_RXBUF);
 
    static const struct rte_vhost_device_ops ops = {
@@ -85,7 +85,7 @@ void VhostController::start() {
       throw std::runtime_error("vhost driver start failed");
    }
 
-   RTE_LOG(INFO, VLOOP, "vhost-user backend ready on %s,"
+   RTE_LOG(INFO, VHDEV, "vhost-user backend ready on %s,"
       " waiting for guest...\n", path);
 }
 
@@ -115,15 +115,15 @@ int VhostController::cb_vring_state_changed(int vid, uint16_t queue_id, int enab
 // Device lifecycle hooks
 //------------------------------------------------------------------
 void VhostController::on_new_device(int vid) {
-   RTE_LOG(INFO, VLOOP, "new device vid=%d\n", vid);
+   RTE_LOG(INFO, VHDEV, "new device vid=%d\n", vid);
 }
 
 void VhostController::on_destroy_device(int vid) {
-   RTE_LOG(INFO, VLOOP, "destroy device vid=%d\n", vid);
+   RTE_LOG(INFO, VHDEV, "destroy device vid=%d\n", vid);
 }
 
 void VhostController::on_vring_state_changed(int vid, uint16_t queue_id, int enable) {
-   RTE_LOG(INFO, VLOOP, "vring state changed vid=%d queue=%u enable=%d\n",
+   RTE_LOG(INFO, VHDEV, "vring state changed vid=%d queue=%u enable=%d\n",
            vid, queue_id, enable);
 }
 
