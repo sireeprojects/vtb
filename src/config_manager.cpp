@@ -91,6 +91,10 @@ void ConfigManager::init_vhost_device(int port_id, int vid, int nof_pairs) {
       // Initialize port fds to -1 (not connected yet)
       pm.pd.qp[i].rxq_id = -1;
       pm.pd.qp[i].txq_id = -1;
+
+      // CHECK is ready useful?
+      pm.vd.ready = true;
+      pm.vd.ctlq_id = nof_pairs * 2; // CHECK
    }
 }
 
@@ -98,9 +102,15 @@ void ConfigManager::set_queue_state(int port_id, uint16_t vring_id, bool enable)
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    auto it = pmap_.find(port_id);
-   if (it == pmap_.end()) return;
+
+   if (it == pmap_.end()) {
+      return;
+   }
 
    VhostDevice& vd = it->second.vd;
+
+   // TODO need to add a check
+   // check if vring_id is less than nof_queue_pairs*2
 
    for (int i = 0; i < vd.nof_queue_pairs; i++) {
       if (vd.qp[i].rxq_id == vring_id) {
@@ -114,68 +124,114 @@ void ConfigManager::set_queue_state(int port_id, uint16_t vring_id, bool enable)
    }
 }
 
-void ConfigManager::assign_port_socket(int port_id, int qp_idx, int socket_fd) {
+void ConfigManager::assign_port_data_socket(int port_id, int qp_idx, int socket_fd) {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    if (pmap_.count(port_id) && qp_idx < vtb::MAX_QUEUE_PAIRS) {
       // We assign the same FD to both handles
       pmap_[port_id].pd.qp[qp_idx].rxq_id = socket_fd;
       pmap_[port_id].pd.qp[qp_idx].txq_id = socket_fd;
-
-      // Mark as ready if this is the primary queue
-      if (qp_idx == 0) pmap_[port_id].vd.ready = true;
    }
+   // TODO if the if() fails then print error msg
 }
 
-void ConfigManager::assign_control_path(int port_id, int ctl_fd) {
+void ConfigManager::assign_port_control_socket(int port_id, int ctl_fd) {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    if (pmap_.count(port_id)) {
-      pmap_[port_id].vd.ctlq_id = (uint16_t)ctl_fd; // Logical ID
-      pmap_[port_id].pd.ctlq_id = ctl_fd;            // Physical FD
+      pmap_[port_id].pd.ctlq_id = ctl_fd;
    }
 }
 
 void ConfigManager::print_portmap() {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
-   info() << "------------------------------------------------------------";
-   info() << std::left << std::setw(6)  << "Port"
-          << std::setw(6)  << "VID"
-          << std::setw(8)  << "Pairs"
-          << std::setw(15) << "Vhost (RX/TX)"
-          << "Port (RX/TX)";
-   info() << "------------------------------------------------------------";
+   // Table Header
+   info() << std::left
+          << std::setw(8)  << "Port#"
+          << std::setw(6)  << "Vid"
+          << std::setw(8)  << "No Qs"
+          << std::setw(8)  << "RxQID"
+          << std::setw(8)  << "TxQID"
+          << std::setw(10) << "RxQID_En"
+          << std::setw(10) << "TxQID_En"
+          << std::setw(8)  << "Ready"
+          << std::setw(8)  << "CtrlID"
+          << std::setw(8)  << "RxQFd"
+          << std::setw(8)  << "TxQFd"
+          << "CtrlFd";
+
+   info() << std::string(110, '-');
 
    for (const auto& [port_id, map] : pmap_) {
       const auto& vd = map.vd;
       const auto& pd = map.pd;
 
-      // Print main port info and the first queue pair
-      std::string vhost_q = std::to_string(vd.qp[0].rxq_id) + "/" +
-                            std::to_string(vd.qp[0].txq_id);
-      std::string port_q  = std::to_string(pd.qp[0].rxq_id) + "/" +
-                            std::to_string(pd.qp[0].txq_id);
+      for (int i = 0; i < vd.nof_queue_pairs; ++i) {
+         const auto& vqp = vd.qp[i];
+         const auto& pqp = pd.qp[i];
 
-      info() << std::left << std::setw(6)  << port_id
-             << std::setw(6)  << vd.vid
-             << std::setw(8)  << vd.nof_queue_pairs
-             << std::setw(15) << vhost_q
-             << port_q;
+         std::stringstream ss;
 
-      // Print additional queue pairs if they exist
-      for (int i = 1; i < vd.nof_queue_pairs; ++i) {
-         std::string v_extra = std::to_string(vd.qp[i].rxq_id) + "/" +
-                               std::to_string(vd.qp[i].txq_id);
-         std::string p_extra = std::to_string(pd.qp[i].rxq_id) + "/" +
-                               std::to_string(pd.qp[i].txq_id);
+         if (i == 0) {
+            // First row: Print Port, Vid, No Qs, Ready, CtrlID, and CtrlFd
+            ss << std::left
+               << std::setw(8) << port_id
+               << std::setw(6) << vd.vid
+               << std::setw(8) << vd.nof_queue_pairs
+               << std::setw(8) << vqp.rxq_id
+               << std::setw(8) << vqp.txq_id
+               << std::setw(10) << (vqp.rxq_enabled ? "YES" : "NO")
+               << std::setw(10) << (vqp.txq_enabled ? "YES" : "NO")
+               << std::setw(8)  << (vd.ready ? "YES" : "NO")
+               << std::setw(8)  << vd.ctlq_id
+               << std::setw(8)  << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
+               << std::setw(8)  << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
+               << pd.ctlq_id;
+         } else {
+            // Subsequent rows: Leave Port/Vid/NoQs/Ready/CtrlID/CtrlFd empty
+            ss << std::left
+               << std::setw(22) << " " // Port#, Vid, No Qs
+               << std::setw(8)  << vqp.rxq_id
+               << std::setw(8)  << vqp.txq_id
+               << std::setw(10) << (vqp.rxq_enabled ? "YES" : "NO")
+               << std::setw(10) << (vqp.txq_enabled ? "YES" : "NO")
+               << std::setw(8)  << " " // Ready
+               << std::setw(8)  << " " // CtrlID
+               << std::setw(8)  << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
+               << std::setw(8)  << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
+               << " ";                 // CtrlFd
+         }
 
-         info() << std::setw(20) << " " // Offset for Port/VID/Pairs columns
-                << std::setw(15) << v_extra
-                << p_extra;
+         info() << ss.str();
       }
-      info() << "------------------------------------------------------------";
+      info() << std::string(110, '-');
    }
+}
+
+std::tuple<int, uint16_t, uint16_t>
+ConfigManager::get_vhost_qids(int port_id, int q_num) {
+   std::lock_guard<std::mutex> lock(pmap_mutex_);
+
+   auto it = pmap_.find(port_id);
+   if (it == pmap_.end()) {
+      // Return -1 for vid to indicate the port was not found
+      return {-1, 0, 0};
+   }
+
+   const VhostDevice& vd = it->second.vd;
+
+   // Ensure the requested queue number is within the valid range for this device
+   if (q_num < 0 || q_num >= vd.nof_queue_pairs) {
+      return {-1, 0, 0};
+   }
+
+   // Return the rxq_id and txq_id of the specific queue pair index (q_num)
+   // for the Vhost side of the particular port.
+   uint16_t rxq = vd.qp[q_num].rxq_id;
+   uint16_t txq = vd.qp[q_num].txq_id;
+
+   return {vd.vid, rxq, txq};
 }
 
 } // namespace vtb

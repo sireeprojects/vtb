@@ -116,29 +116,42 @@ int main(int argc, char** argv) {
    // Port 0, Virtual ID 10, 2 Queue Pairs
    int port_0 = 0;
    int vid_0 = 10;
-   config.init_vhost_device(port_0, vid_0, 2);
+   config.init_vhost_device(port_0, vid_0, 8);
+   config.init_vhost_device(port_0+1, vid_0+1, 8);
 
-   // 4. Assign Socket FDs (Simulating backend connection)
-   // Assigning a dummy FD (e.g., 50) to the first queue pair
-   config.assign_port_socket(port_0, 0, 50);
-   
-   // 5. Assign Control Path
-   // Logical control ID 100
-   config.assign_control_path(port_0, 100);
+   config.assign_port_data_socket(port_0, 0, 50);
+   config.assign_port_data_socket(port_0, 1, 51);
 
-   // 6. Set Queue States (Simulating Vhost Handshake)
-   // Enable RX (0) and TX (1) for the first pair
+   config.assign_port_data_socket(port_0+1, 0, 50);
+   config.assign_port_data_socket(port_0+1, 1, 51);
+
+   config.assign_port_control_socket(port_0, 100);
+   config.assign_port_control_socket(port_0+1, 101);
+
    config.set_queue_state(port_0, 0, true);
-   config.set_queue_state(port_0, 1, true);
-
-   // 7. Add a second port for comparison
-   config.init_vhost_device(1, 11, 1);
-   config.assign_port_socket(1, 0, 60);
-   config.assign_control_path(1, 101);
+   config.set_queue_state(port_0, 3, true);
 
    // 8. Final Output
    vtb::info() << "Displaying Configured Port Map:";
    config.print_portmap();
+
+
+   //------------------------------------------------
+   //
+   int port_id = 1;
+   int queue_number = 5;
+   
+   // Retrieve the values
+   auto [vid, rx_id, tx_id] = config.get_vhost_qids(port_id, queue_number);
+
+   if (vid != -1) {
+      vtb::info() << "Mapping for Port " << port_id << " Queue " << queue_number << ":";
+      vtb::info() << "  VID      : " << vid;
+      vtb::info() << "  Vhost RX : " << rx_id; // Will be 6
+      vtb::info() << "  Vhost TX : " << tx_id; // Will be 7
+   } else {
+      vtb::error() << "Port " << port_id << " not found in configuration.";
+   }
 
    vtb::info() << "Demonstration Complete.";
 
