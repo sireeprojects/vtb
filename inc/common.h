@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
+#include <string_view>
 
 namespace vtb {
 
@@ -35,5 +37,12 @@ struct PortMap {
    VhostDevice vd;
    PortDevice pd;
 };
+
+class port_controller;
+
+// The factory function declaration
+std::unique_ptr<port_controller> create_controller(std::string_view mode);
+
+int create_socket(const std::string& path);
 
 }

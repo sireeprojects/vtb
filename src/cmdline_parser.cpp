@@ -75,16 +75,16 @@ void CmdlineParser::parse(int argc, char** argv) {
 
 void CmdlineParser::print_usage() const {
    std::cout << "\nUsage: ./app [EAL options] -- [APP options]\n\n";
-   std::cout << std::left << std::setw(20) << "Long Flag"
+   std::cout << std::left << std::setw(25) << "Long Flag"
              << std::setw(10) << "Short"
-             << std::setw(35) << "Description"
+             << std::setw(55) << "Description"
              << "Required\n";
-   std::cout << std::string(75, '-') << "\n";
+   std::cout << std::string(100, '-') << "\n";
 
    for (const auto& arg : arguments_) {
-      std::cout << std::left << std::setw(20) << arg.long_name
+      std::cout << std::left << std::setw(25) << arg.long_name
                 << std::setw(10) << arg.short_name
-                << std::setw(35) << arg.description
+                << std::setw(55) << arg.description
                 << (arg.required ? "Yes" : "No") << "\n";
    }
    std::cout << std::endl;

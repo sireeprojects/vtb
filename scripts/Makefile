@@ -3,7 +3,7 @@ CXX      := g++
 CXXFLAGS := -I../inc -Wall -Wextra -std=c++17 `pkg-config --cflags libdpdk`
 LDFLAGS  :=  `pkg-config --libs libdpdk` -pthread
 
-PROJ_ROOT = /root/vtb/
+PROJ_ROOT = /root/vtb
 
 # Directories
 SRC_DIR  := $(PROJ_ROOT)/src
@@ -44,7 +44,17 @@ run:
 	@./vtb_app -l 1-2 --file-prefix=vhost_backend --no-pci --no-telemetry \
 		--log-level=lib.vhost.config:3 \
 		--log-level=lib.eal:3 \
-		-- \
-		--mode Local \
+		-- --help \
+		--mode Loopback \
+		--abstract_sockname absockname \
+		--port_data_sockname datasockname \
+		--port_control_sockname controlsockname \
+		--vhost_sockname vhostsockname
 	
 .PHONY: all clean
+
+
+
+		#--mode Emulator \
+		#--mode Back2Back \
+		#--mode Loopback \

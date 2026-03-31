@@ -1,9 +1,11 @@
 #include "cmdline_parser.h"
 #include "config_manager.h"
 #include "vhost_controller.h"
+#include "port_controller_loopback.h"
 
 #include "logger.h"
 #include "messenger.h"
+#include "common.h"
 
 #include <csignal>
 #include <termios.h>
@@ -51,14 +53,28 @@ int main(int argc, char** argv) {
    if (!config.init(argc, argv)) {
       return -1;
    }
-   
+
+   auto mode = config.get_arg<std::string>("-m");
+   vtb::info() << "Mode: " << mode;
+
+   auto absn = config.get_arg<std::string>("-absn");
+   vtb::info() << "Abstract Socket Name: " << absn;
+
+   auto pdsn = config.get_arg<std::string>("-pdsn");
+   vtb::info() << "Port Data Socket Name: " << pdsn;
+
+   auto pcsn = config.get_arg<std::string>("-pcsn");
+   vtb::info() << "Port Control Socket Name: " << pcsn;
+
+   auto vsn  = config.get_arg<std::string>("-vsn");
+   vtb::info() << "Vhost Socket Name: " << vsn;
+
+   std::unique_ptr<port_controller> controller = vtb::create_controller(mode);
+   controller->start();
+
    // assign signal handler for graceful exit
    std::signal(SIGINT,  signal_handler);
    std::signal(SIGTERM, signal_handler);
-
-   // vhost and eal messages to just errors
-   // rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
-   // rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
 
    const char* socket_path = "/tmp/vhost-user.sock";
 
@@ -69,14 +85,18 @@ int main(int argc, char** argv) {
    rte_eal_remote_launch(worker_thread, NULL, 2);
    rte_eal_mp_wait_lcore();
 
-   auto mode = config.get_arg<std::string>("--mode");
-   vtb::info() << "Mode=" << mode;
-
-   // check vhost devices and queues for ports
-   config.print_portmap();
-
    restore_echoctl();
 
    vtb::info() << "Demonstration Complete.";
    return 0;
 }
+
+
+   // vhost and eal messages to just errors
+   // rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
+   // rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
+
+   // config.dump_config();
+   // check vhost devices and queues for ports
+   // config.print_portmap();
+

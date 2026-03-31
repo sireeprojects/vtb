@@ -87,8 +87,9 @@ void VhostController::start() {
       throw std::runtime_error("vhost driver start failed");
    }
 
-   RTE_LOG(INFO, VHDEV, "vhost-user backend ready on %s,"
-      " waiting for guest...\n", path);
+   // RTE_LOG(INFO, VHDEV, "vhost-user backend ready on %s,"
+      // " waiting for guest...\n", path);
+   vtb::info() << "vhost-user backend ready on " << path << " waiting for guest...";
 }
 
 // run() — launches main on a lcore TODO

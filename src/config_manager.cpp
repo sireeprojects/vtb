@@ -10,12 +10,24 @@ ConfigManager& ConfigManager::get_instance() {
 }
 
 ConfigManager::ConfigManager() {
-   parser_.add_argument(
-      "--help", "-h",
-      "Show this help menu", false, "false");
-   parser_.add_argument(
-      "--mode", "-m",
-      "Local | Emulator", false, "Local");
+   parser_.add_argument("--help", "-h",
+      "Show this help menu",
+      false, "false");
+   parser_.add_argument("--mode", "-m",
+      "Loopback | Back2Back | Emulator",
+      false, "Loopback");
+   parser_.add_argument("--abstract_sockname", "-absn",
+      "Specify a random name. For internal use only",
+      false, "cm_to_ph_sock");
+   parser_.add_argument("--port_data_sockname", "-pdsn",
+      "Unix socket path to connect to port data plane",
+      false, "/tmp/port_data.sock");
+   parser_.add_argument("--port_control_sockname", "-pcsn",
+      "Unix socket path to connect to port control plane",
+      false, "/tmp/port_ctrl.sock");
+   parser_.add_argument("--vhost_sockname", "-vsn",
+      "Unix socket path to connect to virtual machine",
+      false, "/tmp/vhost.sock");
 }
 
 ConfigManager::~ConfigManager() {
