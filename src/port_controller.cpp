@@ -6,7 +6,7 @@ port_controller::port_controller() : is_running_(false) {
 }
 
 port_controller::~port_controller() {
-   vtb::info() << "Stopping epoll worker";
+   vtb::info() << "Cleanup: Port Controller";
    is_running_ = false;
    if (worker_.joinable()) {
       worker_.join();

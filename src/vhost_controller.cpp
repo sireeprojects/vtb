@@ -26,12 +26,12 @@ VhostController::VhostController(std::string socket_path) : socket_path_{std::mo
    VhostController* expected = nullptr;
 
    if (!instance_.compare_exchange_strong(expected, this, std::memory_order_acq_rel)) {
-      throw std::runtime_error("only one VhostController instance allowed");
+      throw std::runtime_error("Vhost Controller: Only one Vhost Controller instance allowed");
    }
 }
 
 VhostController::~VhostController() {
-   vtb::info() << "Cleaning up Vhost Backend...";
+   vtb::info() << "Cleanup: Vhost Controller";
 
    if (driver_registered_) {
       rte_vhost_driver_unregister(socket_path_.c_str());
@@ -51,7 +51,7 @@ void VhostController::init(int argc, char* argv[]) {
    int ret = rte_eal_init(argc, argv);
 
    if (ret < 0)
-      throw std::runtime_error("EAL init failed");
+      throw std::runtime_error("Vhost Controller: EAL init failed");
 
    eal_initialised_ = true;
 }
@@ -61,7 +61,7 @@ void VhostController::start() {
    const char* path = socket_path_.c_str();
 
    if (rte_vhost_driver_register(path, 0) != 0) {
-      throw std::runtime_error("vhost driver register failed: " + socket_path_);
+      throw std::runtime_error("Vhost Controller: Driver register failed: " + socket_path_);
    }
    driver_registered_ = true;
 
@@ -80,16 +80,14 @@ void VhostController::start() {
    };
 
    if (rte_vhost_driver_callback_register(path, &ops) != 0) {
-      throw std::runtime_error("vhost callback register failed");
+      throw std::runtime_error("Vhost Controller: Callback register failed");
    }
 
    if (rte_vhost_driver_start(path) != 0) {
-      throw std::runtime_error("vhost driver start failed");
+      throw std::runtime_error("Vhost Controller: Driver start failed");
    }
-
-   // RTE_LOG(INFO, VHDEV, "vhost-user backend ready on %s,"
-      // " waiting for guest...\n", path);
-   vtb::info() << "vhost-user backend ready on " << path << " waiting for guest...";
+   vtb::info() << "Vhost Controller: Ready @" << path;
+   vtb::info() << "Vhost Controller: waiting for guest...";
 }
 
 // run() — launches main on a lcore TODO
@@ -121,7 +119,7 @@ void VhostController::on_new_device(int vid) {
    RTE_LOG(INFO, VHDEV, "new device vid=%d\n", vid);
 
     int vring_count = rte_vhost_get_vring_num(vid);
-    vtb::details() << "Total Number of queues for " << vid << " is " << vring_count 
+    vtb::details() << "Vhost Controller: Total Number of queues for " << vid << " is " << vring_count 
        << " for with portnum " << VhostController::port_cntr_;
 
     vtb::ConfigManager::get_instance().init_vhost_device(
@@ -140,20 +138,10 @@ void VhostController::on_destroy_device(int vid) {
 }
 
 void VhostController::on_vring_state_changed(int vid, uint16_t queue_id, int enable) {
-   RTE_LOG(INFO, VHDEV, "vring state changed vid=%d queue=%u enable=%d\n",
-           vid, queue_id, enable);
-
-   vtb::details() << "vring state changed vid=" << vid
+   vtb::details() << "Vhost Controller: vring state changed vid=" << vid
                                     << "queue_id=" << queue_id
                                     << "enable=" << enable;
-
-   vtb::ConfigManager::get_instance().set_queue_state(
-         vid,
-         queue_id,
-         enable
-         );
-
-
+   vtb::ConfigManager::get_instance().set_queue_state(vid, queue_id, enable);
 }
 
 }

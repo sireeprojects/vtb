@@ -2,35 +2,15 @@
 #include "config_manager.h"
 #include "vhost_controller.h"
 #include "port_controller_loopback.h"
-
 #include "logger.h"
 #include "messenger.h"
 #include "common.h"
 
 #include <csignal>
-#include <termios.h>
-#include <unistd.h>
 
-using namespace vtb;
-
-static struct termios old_t, new_t;
 bool stop_blocking_{false};
 
-static void disable_echoctl() {
-   // Get current terminal settings
-   tcgetattr(STDIN_FILENO, &old_t);
-   new_t = old_t;
-
-   // Hide the ^C (Disable ECHOCTL)
-   new_t.c_lflag &= ~ECHOCTL;
-   tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
-}
-
-static void restore_echoctl() {
-   tcsetattr(STDIN_FILENO, TCSANOW, &old_t);
-}
-
-static int worker_thread(void*) {
+static int keep_alive(void*) {
     while (!stop_blocking_) {
         rte_pause();
     }
@@ -38,12 +18,16 @@ static int worker_thread(void*) {
 }
 
 static void signal_handler(int) {
-   vtb::info() << "User Interruption";
+   vtb::info() << "<User Pressed Ctrl+C>";
    stop_blocking_ = true;
 }
 
 int main(int argc, char** argv) {
-   disable_echoctl();
+   vtb::disable_echoctl();
+
+   // assign signal handler for graceful exit
+   std::signal(SIGINT,  signal_handler);
+   std::signal(SIGTERM, signal_handler);
 
    // setup logger
    vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
@@ -51,43 +35,29 @@ int main(int argc, char** argv) {
    // setup configuration manager
    auto& config = vtb::ConfigManager::get_instance();
    if (!config.init(argc, argv)) {
+      vtb::error() << "Config.Init failed";
       return -1;
    }
 
+   // start the appropriate port controller
    auto mode = config.get_arg<std::string>("-m");
-   vtb::info() << "Mode: " << mode;
+   std::unique_ptr<vtb::port_controller> port_controller = vtb::create_controller(mode);
 
-   auto absn = config.get_arg<std::string>("-absn");
-   vtb::info() << "Abstract Socket Name: " << absn;
+   port_controller->start();
 
-   auto pdsn = config.get_arg<std::string>("-pdsn");
-   vtb::info() << "Port Data Socket Name: " << pdsn;
+   // start vhost controller
+   auto socket_path  = config.get_arg<std::string>("-vsn");
+   vtb::VhostController backend(socket_path.c_str());
 
-   auto pcsn = config.get_arg<std::string>("-pcsn");
-   vtb::info() << "Port Control Socket Name: " << pcsn;
-
-   auto vsn  = config.get_arg<std::string>("-vsn");
-   vtb::info() << "Vhost Socket Name: " << vsn;
-
-   std::unique_ptr<port_controller> controller = vtb::create_controller(mode);
-   controller->start();
-
-   // assign signal handler for graceful exit
-   std::signal(SIGINT,  signal_handler);
-   std::signal(SIGTERM, signal_handler);
-
-   const char* socket_path = "/tmp/vhost-user.sock";
-
-   VhostController backend(socket_path);
    backend.init(argc, argv);
    backend.start();
 
-   rte_eal_remote_launch(worker_thread, NULL, 2);
+   rte_eal_remote_launch(keep_alive, NULL, 2);
    rte_eal_mp_wait_lcore();
 
-   restore_echoctl();
+   vtb::restore_echoctl();
 
-   vtb::info() << "Demonstration Complete.";
+   vtb::info() << "Test Done. Starting cleanup...";
    return 0;
 }
 
@@ -99,4 +69,17 @@ int main(int argc, char** argv) {
    // config.dump_config();
    // check vhost devices and queues for ports
    // config.print_portmap();
+
+
+   // auto absn = config.get_arg<std::string>("-absn");
+   // vtb::info() << "Abstract Socket Name: " << absn;
+
+   // auto pdsn = config.get_arg<std::string>("-pdsn");
+   // vtb::info() << "Port Data Socket Name: " << pdsn;
+
+   // auto pcsn = config.get_arg<std::string>("-pcsn");
+   // vtb::info() << "Port Control Socket Name: " << pcsn;
+
+   // auto vsn  = config.get_arg<std::string>("-vsn");
+   // vtb::info() << "Vhost Socket Name: " << vsn;
 

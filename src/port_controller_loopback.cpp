@@ -30,7 +30,6 @@ void port_controller_loopback::monitor_and_dispatch_handler() {
 }
 
 void port_controller_loopback::epoll_worker() {
-   vtb::info() << "Launching epoll worker";
    while (is_running_) {
        int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
        for (int n = 0; n < nfds; ++n) {

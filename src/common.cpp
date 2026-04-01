@@ -9,6 +9,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <cstring>
+#include <pthread.h>
+#include <termios.h>
 
 namespace vtb {
 
@@ -97,5 +99,22 @@ void set_thread_name(std::thread& th, const std::string& name) {
         std::cerr << "Error setting thread name: " << std::strerror(rc) << std::endl;
     }
 }
+
+struct termios old_t, new_t;
+
+void disable_echoctl() {
+   // Get current terminal settings
+   tcgetattr(STDIN_FILENO, &old_t);
+   new_t = old_t;
+
+   // Hide the ^C (Disable ECHOCTL)
+   new_t.c_lflag &= ~ECHOCTL;
+   tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
+}
+
+void restore_echoctl() {
+   tcsetattr(STDIN_FILENO, TCSANOW, &old_t);
+}
+
 
 }

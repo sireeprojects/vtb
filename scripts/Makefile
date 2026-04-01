@@ -49,7 +49,7 @@ run:
 		--abstract_sockname absockname \
 		--port_data_sockname datasockname \
 		--port_control_sockname controlsockname \
-		--vhost_sockname vhostsockname
+		--vhost_sockname /tmp/vhost-user.sock
 	
 .PHONY: all clean
 
