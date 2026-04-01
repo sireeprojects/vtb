@@ -86,4 +86,16 @@ int create_socket(const std::string& path) {
     return sock_fd;
 }
 
+void set_thread_name(std::thread& th, const std::string& name) {
+    // We need the native handle (which is a pthread_t on Linux)
+    auto handle = th.native_handle();
+
+    // pthread_setname_np returns 0 on success
+    int rc = pthread_setname_np(handle, name.c_str());
+
+    if (rc != 0) {
+        std::cerr << "Error setting thread name: " << std::strerror(rc) << std::endl;
+    }
+}
+
 }

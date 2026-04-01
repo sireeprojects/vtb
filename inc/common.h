@@ -3,6 +3,10 @@
 #include <cstdint>
 #include <memory>
 #include <string_view>
+#include <thread>
+#include <pthread.h>
+#include <string>
+#include <cstring>
 
 namespace vtb {
 
@@ -44,5 +48,7 @@ class port_controller;
 std::unique_ptr<port_controller> create_controller(std::string_view mode);
 
 int create_socket(const std::string& path);
+
+void set_thread_name(std::thread& th, const std::string& name);
 
 }

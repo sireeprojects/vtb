@@ -6,6 +6,7 @@ port_controller::port_controller() : is_running_(false) {
 }
 
 port_controller::~port_controller() {
+   vtb::info() << "Stopping epoll worker";
    is_running_ = false;
    if (worker_.joinable()) {
       worker_.join();
@@ -21,6 +22,8 @@ void port_controller::launch_worker() {
    if (!is_running_) {
       is_running_ = true;
       worker_ = std::thread(&port_controller::epoll_worker, this);
+      vtb::set_thread_name(worker_, "epollWorker");
+      worker_.detach();
    }
 }
 

@@ -26,8 +26,7 @@ void port_controller_loopback::monitor_and_dispatch_handler() {
    ev.data.fd = abstract_fd_;
    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, abstract_fd_, &ev);
    vtb::info() << "Launching epoll worker";
-   // launch_worker();
-   // TODO detach thread
+   launch_worker();
 }
 
 void port_controller_loopback::epoll_worker() {

@@ -21,13 +21,14 @@ protected:
    void epoll_worker() override;
 
 private:
+   static constexpr int MAX_EVENTS=10;
+   static constexpr int BUFFER_SIZE=1024;
+
    std::string abstract_sockname_{};
    int abstract_fd_{-1};
    int epoll_fd{-1};
    struct epoll_event ev, events[MAX_EVENTS];
 
-   static constexpr int MAX_EVENTS=10;
-   static constexpr int BUFFER_SIZE=1024;
 };
 
 } // namespace vtb
