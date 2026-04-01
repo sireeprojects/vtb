@@ -19,4 +19,4 @@ void port_controller_back2back::epoll_worker() {
    }
 }
 
-} // namespace vtb
+}  // namespace vtb

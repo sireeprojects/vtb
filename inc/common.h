@@ -1,10 +1,11 @@
 #pragma once
 
+#include <unistd.h>
+
 #include <cstdint>
 #include <memory>
 #include <string_view>
 #include <thread>
-#include <unistd.h>
 
 #include "messenger.h"
 
@@ -74,17 +75,17 @@ bool is_odd(int n);
 
 template <typename T>
 bool send_packet(int fd, const T& data) {
-    ssize_t bytes_sent = write(fd, &data, sizeof(T));
+   ssize_t bytes_sent = write(fd, &data, sizeof(T));
 
-    if (bytes_sent == -1) {
-        perror("write");
-        return false;
-    } else if (static_cast<size_t>(bytes_sent) < sizeof(T)) {
-        // Handle partial writes if necessary for large buffers
-        vtb::info() << "Warning: Partial write occurred";
-        return false;
-    }
-    return true;
+   if (bytes_sent == -1) {
+      perror("write");
+      return false;
+   } else if (static_cast<size_t>(bytes_sent) < sizeof(T)) {
+      // Handle partial writes if necessary for large buffers
+      vtb::info() << "Warning: Partial write occurred";
+      return false;
+   }
+   return true;
 }
 
-}
+}  // namespace vtb

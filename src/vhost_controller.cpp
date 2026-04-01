@@ -1,16 +1,16 @@
+#include "vhost_controller.h"
+
+#include <rte_log.h>
+#include <unistd.h>
+
+#include <cinttypes>
+#include <csignal>
+#include <cstdio>
+#include <stdexcept>
+
 #include "config_manager.h"
 #include "logger.h"
 #include "messenger.h"
-
-#include <csignal>
-#include <cstdio>
-#include <cinttypes>
-#include <stdexcept>
-#include <unistd.h>
-
-#include <rte_log.h>
-
-#include "vhost_controller.h"
 
 namespace vtb {
 
@@ -22,11 +22,14 @@ std::atomic<VhostController*> VhostController::instance_{nullptr};
 int VhostController::port_cntr_ = 0;
 
 // Ctor
-VhostController::VhostController(std::string socket_path) : socket_path_{std::move(socket_path)} {
+VhostController::VhostController(std::string socket_path)
+    : socket_path_{std::move(socket_path)} {
    VhostController* expected = nullptr;
 
-   if (!instance_.compare_exchange_strong(expected, this, std::memory_order_acq_rel)) {
-      throw std::runtime_error("Vhost Controller: Only one Vhost Controller instance allowed");
+   if (!instance_.compare_exchange_strong(expected, this,
+                                          std::memory_order_acq_rel)) {
+      throw std::runtime_error(
+          "Vhost Controller: Only one Vhost Controller instance allowed");
    }
 
    mode_ = vtb::ConfigManager::get_instance().get_arg<std::string>("-m");
@@ -55,8 +58,7 @@ VhostController::~VhostController() {
 void VhostController::init(int argc, char* argv[]) {
    int ret = rte_eal_init(argc, argv);
 
-   if (ret < 0)
-      throw std::runtime_error("Vhost Controller: EAL init failed");
+   if (ret < 0) throw std::runtime_error("Vhost Controller: EAL init failed");
 
    eal_initialised_ = true;
 }
@@ -66,7 +68,8 @@ void VhostController::start() {
    const char* path = socket_path_.c_str();
 
    if (rte_vhost_driver_register(path, 0) != 0) {
-      throw std::runtime_error("Vhost Controller: Driver register failed: " + socket_path_);
+      throw std::runtime_error("Vhost Controller: Driver register failed: " +
+                               socket_path_);
    }
    driver_registered_ = true;
 
@@ -74,15 +77,14 @@ void VhostController::start() {
    rte_vhost_driver_enable_features(path, 1ULL << VIRTIO_NET_F_MRG_RXBUF);
 
    static const struct rte_vhost_device_ops ops = {
-      .new_device          = cb_new_device,
-      .destroy_device      = cb_destroy_device,
-      .vring_state_changed = cb_vring_state_changed,
-      .features_changed    = nullptr,
-      .new_connection      = nullptr,
-      .destroy_connection  = nullptr,
-      .guest_notified      = nullptr,
-      .guest_notify        = nullptr
-   };
+       .new_device = cb_new_device,
+       .destroy_device = cb_destroy_device,
+       .vring_state_changed = cb_vring_state_changed,
+       .features_changed = nullptr,
+       .new_connection = nullptr,
+       .destroy_connection = nullptr,
+       .guest_notified = nullptr,
+       .guest_notify = nullptr};
 
    if (rte_vhost_driver_callback_register(path, &ops) != 0) {
       throw std::runtime_error("Vhost Controller: Callback register failed");
@@ -112,8 +114,10 @@ void VhostController::cb_destroy_device(int vid) {
    instance_.load(std::memory_order_acquire)->on_destroy_device(vid);
 }
 
-int VhostController::cb_vring_state_changed(int vid, uint16_t queue_id, int enable) {
-   instance_.load(std::memory_order_acquire)->on_vring_state_changed(vid, queue_id, enable);
+int VhostController::cb_vring_state_changed(int vid, uint16_t queue_id,
+                                            int enable) {
+   instance_.load(std::memory_order_acquire)
+       ->on_vring_state_changed(vid, queue_id, enable);
    return 0;
 }
 
@@ -123,37 +127,37 @@ int VhostController::cb_vring_state_changed(int vid, uint16_t queue_id, int enab
 void VhostController::on_new_device(int vid) {
    vtb::info() << "Vhost Controller: New device added with VID: " << vid;
 
-    int vring_count = rte_vhost_get_vring_num(vid);
-    vtb::details() << "Vhost Controller: Total Number of queues for " << vid << " is " << vring_count 
-       << " for with portnum " << VhostController::port_cntr_;
+   int vring_count = rte_vhost_get_vring_num(vid);
+   vtb::details() << "Vhost Controller: Total Number of queues for " << vid
+                  << " is " << vring_count << " for with portnum "
+                  << VhostController::port_cntr_;
 
-    vtb::ConfigManager::get_instance().init_vhost_device(
-        VhostController::port_cntr_,
-        vid,
-        (vring_count/2)
-        );
-    vtb::ConfigManager::get_instance().set_queue_state(vid, 0, 1);
-    vtb::ConfigManager::get_instance().set_queue_state(vid, 1, 1);
+   vtb::ConfigManager::get_instance().init_vhost_device(
+       VhostController::port_cntr_, vid, (vring_count / 2));
+   vtb::ConfigManager::get_instance().set_queue_state(vid, 0, 1);
+   vtb::ConfigManager::get_instance().set_queue_state(vid, 1, 1);
 
-    VhostController::port_cntr_ ++;
+   VhostController::port_cntr_++;
 }
 
 void VhostController::on_destroy_device(int vid) {
    vtb::info() << "Vhost Controller: Device with VID: " << vid << " removed";
 }
 
-void VhostController::on_vring_state_changed(int vid, uint16_t queue_id, int enable) {
+void VhostController::on_vring_state_changed(int vid, uint16_t queue_id,
+                                             int enable) {
    vtb::details() << "Vhost Controller: vring state changed vid=" << vid
-                                    << "queue_id=" << queue_id
-                                    << "enable=" << enable;
+                  << "queue_id=" << queue_id << "enable=" << enable;
    vtb::ConfigManager::get_instance().set_queue_state(vid, queue_id, enable);
    notify_port_controller(vid, queue_id, enable);
 }
 
 void VhostController::create_client() {
-   abstract_sockname_ = vtb::ConfigManager::get_instance().get_arg<std::string>("-absn");
+   abstract_sockname_ =
+       vtb::ConfigManager::get_instance().get_arg<std::string>("-absn");
    std::string sock_path = std::string(1, '\0') + abstract_sockname_;
-   vtb::details() << "Vhost Controler: Abstract Socket Name: " << abstract_sockname_;
+   vtb::details() << "Vhost Controler: Abstract Socket Name: "
+                  << abstract_sockname_;
 
    if (sock_path.size() > 0 && sock_path[0] == '\0') {
       vtb::details() << "Verified: First byte is NULL.";
@@ -161,7 +165,8 @@ void VhostController::create_client() {
    abstract_fd_ = vtb::create_client_socket(sock_path);
 }
 
-bool VhostController::notify_port_controller(int vid, uint16_t queue_id, int enable) {
+bool VhostController::notify_port_controller(int vid, uint16_t queue_id,
+                                             int enable) {
    std::lock_guard<std::mutex> lock(notify_mutex_);
    if (mode_ == "Loopback" || mode_ == "Back2Back") {
       PortDeviceRingState pdrs = {port_cntr_, vid, queue_id, enable};
@@ -170,4 +175,4 @@ bool VhostController::notify_port_controller(int vid, uint16_t queue_id, int ena
    return false;
 }
 
-}
+}  // namespace vtb

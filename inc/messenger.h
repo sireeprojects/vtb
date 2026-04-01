@@ -1,8 +1,9 @@
 #pragma once
 
-#include "logger.h"
 #include <sstream>
 #include <string>
+
+#include "logger.h"
 
 namespace vtb {
 
@@ -12,7 +13,7 @@ public:
    ~LogStream();
 
    // Support for all standard types
-   template<typename T>
+   template <typename T>
    LogStream& operator<<(const T& value) {
       oss_ << value;
       return *this;
@@ -29,4 +30,4 @@ LogStream info();
 LogStream error();
 LogStream details();
 
-}
+}  // namespace vtb

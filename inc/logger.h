@@ -1,20 +1,16 @@
 #pragma once
 
-#include <string>
-#include <fstream>
-#include <mutex>
-#include <thread>
-#include <sstream>
 #include <atomic>
 #include <condition_variable>
+#include <fstream>
+#include <mutex>
+#include <sstream>
+#include <string>
+#include <thread>
 
 namespace vtb {
 
-enum class LogLevel {
-   ERROR   = 0,
-   DEFAULT = 1,
-   FULL    = 2
-};
+enum class LogLevel { ERROR = 0, DEFAULT = 1, FULL = 2 };
 
 class Logger {
 public:
@@ -45,4 +41,4 @@ private:
    std::condition_variable cv_;
 };
 
-}
+}  // namespace vtb

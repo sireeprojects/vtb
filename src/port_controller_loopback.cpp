@@ -5,18 +5,23 @@ namespace vtb {
 port_controller_loopback::port_controller_loopback() : port_controller() {
 }
 
+port_controller_loopback::~port_controller_loopback() {
+   close(abstract_fd_); // TODO check fd before closing
+}
+
 void port_controller_loopback::create_server() {
-   abstract_sockname_ = vtb::ConfigManager::get_instance().get_arg<std::string>("-absn");
+   abstract_sockname_ =
+       vtb::ConfigManager::get_instance().get_arg<std::string>("-absn");
    std::string sock_path = std::string(1, '\0') + abstract_sockname_;
 
    if (sock_path.size() > 0 && sock_path[0] == '\0') {
-    vtb::details() << "Verified: First byte is NULL.";
+      vtb::details() << "Verified: First byte is NULL.";
    }
 
-   vtb::info() << "Port Controller: Started Loopback Controller with " << abstract_sockname_;
-   
+   vtb::info() << "Port Controller: Started Loopback Controller with "
+               << abstract_sockname_;
+
    abstract_fd_ = vtb::create_server_socket(sock_path);
-   // close(abstract_fd_);
 }
 
 void port_controller_loopback::monitor_and_dispatch_handler() {
@@ -31,36 +36,39 @@ void port_controller_loopback::monitor_and_dispatch_handler() {
 
 void port_controller_loopback::epoll_worker() {
    while (is_running_) {
-       int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
-       for (int n = 0; n < nfds; ++n) {
-           int fd = events[n].data.fd;
+      int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+      for (int n = 0; n < nfds; ++n) {
+         int fd = events[n].data.fd;
 
-           if (fd == abstract_fd_) {
-               int client_fd = accept(abstract_fd_, NULL, NULL);
-               vtb::info()<< "Port Controller: Connected to Vhost Controller with Fd: " << client_fd;
-               struct epoll_event client_ev;
-               client_ev.events = EPOLLIN | EPOLLRDHUP;
-               client_ev.data.fd = client_fd;
-               epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
-           } 
-           else if (events[n].events & EPOLLIN) {
-               PortDeviceRingState pdrs;
-               ssize_t bytes = read(fd, &pdrs, sizeof(pdrs));
-               
-               if (bytes <= 0) {
-                  vtb::info()<< "Port Controller: Disconnected to Vhost Controller with Fd: " << fd;
-                  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
-                  close(fd);
-               } else if (bytes == sizeof(PortDeviceRingState)) {
-                  vtb::info()<< "Port Controller Loopback: Received:"
-                     << "  port_id: " << pdrs.port_id
-                     << "  device_id: " << pdrs.device_id
-                     << "  qid: " << pdrs.qid
-                     << "  enable: " << pdrs.enable;
-               }
-           }
-       }
+         if (fd == abstract_fd_) {
+            int client_fd = accept(abstract_fd_, NULL, NULL);
+            vtb::info()
+                << "Port Controller: Connected to Vhost Controller with Fd: "
+                << client_fd;
+            struct epoll_event client_ev;
+            client_ev.events = EPOLLIN | EPOLLRDHUP;
+            client_ev.data.fd = client_fd;
+            epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
+         } else if (events[n].events & EPOLLIN) {
+            PortDeviceRingState pdrs;
+            ssize_t bytes = read(fd, &pdrs, sizeof(pdrs));
+
+            if (bytes <= 0) {
+               vtb::info() << "Port Controller: Disconnected to Vhost "
+                              "Controller with Fd: "
+                           << fd;
+               epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+               close(fd);
+            } else if (bytes == sizeof(PortDeviceRingState)) {
+               vtb::info() << "Port Controller Loopback: Received:"
+                           << "  port_id: " << pdrs.port_id
+                           << "  device_id: " << pdrs.device_id
+                           << "  qid: " << pdrs.qid
+                           << "  enable: " << pdrs.enable;
+            }
+         }
+      }
    }
 }
 
-} // namespace vtb
+}  // namespace vtb

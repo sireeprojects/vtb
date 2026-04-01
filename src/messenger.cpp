@@ -3,7 +3,7 @@
 namespace vtb {
 
 LogStream::LogStream(LogLevel level, const std::string& prefix)
-   : level_(level), prefix_(prefix) {}
+    : level_(level), prefix_(prefix) {}
 
 LogStream::~LogStream() {
    // Only log if the global level allows it
@@ -12,16 +12,10 @@ LogStream::~LogStream() {
    }
 }
 
-LogStream info() {
-   return LogStream(LogLevel::DEFAULT, "[INFO] ");
-}
+LogStream info() { return LogStream(LogLevel::DEFAULT, "[INFO] "); }
 
-LogStream error() {
-   return LogStream(LogLevel::DEFAULT, "[ERROR] ");
-}
+LogStream error() { return LogStream(LogLevel::DEFAULT, "[ERROR] "); }
 
-LogStream details() {
-   return LogStream(LogLevel::FULL, "[DETAILS] ");
-}
+LogStream details() { return LogStream(LogLevel::FULL, "[DETAILS] "); }
 
-}
+}  // namespace vtb

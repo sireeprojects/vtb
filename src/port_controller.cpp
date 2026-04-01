@@ -2,8 +2,7 @@
 
 namespace vtb {
 
-port_controller::port_controller() : is_running_(false) {
-}
+port_controller::port_controller() : is_running_(false) {}
 
 port_controller::~port_controller() {
    vtb::info() << "Cleanup: Port Controller";
@@ -27,4 +26,4 @@ void port_controller::launch_worker() {
    }
 }
 
-} // namespace vtb
+}  // namespace vtb

@@ -1,14 +1,15 @@
 #pragma once
 
-#include <atomic>
-#include <cstdint>
-#include <string>
-#include <thread>
 #include <rte_eal.h>
 #include <rte_mbuf.h>
 #include <rte_mempool.h>
 #include <rte_ring.h>
 #include <rte_vhost.h>
+
+#include <atomic>
+#include <cstdint>
+#include <string>
+#include <thread>
 
 #include "common.h"
 
@@ -43,7 +44,7 @@ protected:
 
 private:
    // Static C callbacks forwarded to the singleton instance.
-   static int  cb_new_device(int vid);
+   static int cb_new_device(int vid);
    static void cb_destroy_device(int vid);
    static int cb_vring_state_changed(int vid, uint16_t queue_id, int enable);
 
@@ -62,4 +63,4 @@ private:
    mutable std::mutex notify_mutex_;
 };
 
-}
+}  // namespace vtb

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "messenger.h"
-#include "config_manager.h"
-
-#include <thread>
 #include <atomic>
+#include <thread>
+
+#include "config_manager.h"
+#include "messenger.h"
 
 namespace vtb {
 
@@ -26,4 +26,4 @@ protected:
    std::thread worker_;
 };
 
-} // namespace vtb
+}  // namespace vtb

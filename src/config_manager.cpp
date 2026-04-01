@@ -1,4 +1,5 @@
 #include "config_manager.h"
+
 #include <iomanip>
 #include <sstream>
 
@@ -10,28 +11,24 @@ ConfigManager& ConfigManager::get_instance() {
 }
 
 ConfigManager::ConfigManager() {
-   parser_.add_argument("--help", "-h",
-      "Show this help menu",
-      false, "false");
-   parser_.add_argument("--mode", "-m",
-      "Loopback | Back2Back | Emulator",
-      false, "Loopback");
+   parser_.add_argument("--help", "-h", "Show this help menu", false, "false");
+   parser_.add_argument("--mode", "-m", "Loopback | Back2Back | Emulator",
+                        false, "Loopback");
    parser_.add_argument("--abstract_sockname", "-absn",
-      "Specify a random name. For internal use only",
-      false, "cm_to_ph_sock");
+                        "Specify a random name. For internal use only", false,
+                        "cm_to_ph_sock");
    parser_.add_argument("--port_data_sockname", "-pdsn",
-      "Unix socket path to connect to port data plane",
-      false, "/tmp/port_data.sock");
+                        "Unix socket path to connect to port data plane", false,
+                        "/tmp/port_data.sock");
    parser_.add_argument("--port_control_sockname", "-pcsn",
-      "Unix socket path to connect to port control plane",
-      false, "/tmp/port_ctrl.sock");
+                        "Unix socket path to connect to port control plane",
+                        false, "/tmp/port_ctrl.sock");
    parser_.add_argument("--vhost_sockname", "-vsn",
-      "Unix socket path to connect to virtual machine",
-      false, "/tmp/vhost.sock");
+                        "Unix socket path to connect to virtual machine", false,
+                        "/tmp/vhost.sock");
 }
 
-ConfigManager::~ConfigManager() {
-}
+ConfigManager::~ConfigManager() {}
 
 bool ConfigManager::init(int argc, char** argv) {
    try {
@@ -71,7 +68,8 @@ void ConfigManager::dump_config() {
          v = ss.str();
       }
 
-      info() << "Key: " << std::left << std::setw(20) << key << " | Value: " << v;
+      info() << "Key: " << std::left << std::setw(20) << key
+             << " | Value: " << v;
    }
 }
 
@@ -97,11 +95,12 @@ void ConfigManager::init_vhost_device(int port_id, int vid, int nof_pairs) {
 
       // CHECK is ready useful?
       pm.vd.ready = true;
-      pm.vd.ctlq_id = nof_pairs * 2; // CHECK
+      pm.vd.ctlq_id = nof_pairs * 2;  // CHECK
    }
 }
 
-void ConfigManager::set_queue_state(int port_id, uint16_t vring_id, bool enable) {
+void ConfigManager::set_queue_state(int port_id, uint16_t vring_id,
+                                    bool enable) {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    auto it = pmap_.find(port_id);
@@ -127,7 +126,8 @@ void ConfigManager::set_queue_state(int port_id, uint16_t vring_id, bool enable)
    }
 }
 
-void ConfigManager::assign_port_data_socket(int port_id, int qp_idx, int socket_fd) {
+void ConfigManager::assign_port_data_socket(int port_id, int qp_idx,
+                                            int socket_fd) {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    if (pmap_.count(port_id) && qp_idx < vtb::MAX_QUEUE_PAIRS) {
@@ -150,19 +150,11 @@ void ConfigManager::print_portmap() {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    // Table Header
-   info() << std::left
-          << std::setw(8)  << "Port#"
-          << std::setw(6)  << "Vid"
-          << std::setw(8)  << "No Qs"
-          << std::setw(8)  << "RxQID"
-          << std::setw(8)  << "TxQID"
-          << std::setw(10) << "RxQID_En"
-          << std::setw(10) << "TxQID_En"
-          << std::setw(8)  << "Ready"
-          << std::setw(8)  << "CtrlID"
-          << std::setw(8)  << "RxQFd"
-          << std::setw(8)  << "TxQFd"
-          << "CtrlFd";
+   info() << std::left << std::setw(8) << "Port#" << std::setw(6) << "Vid"
+          << std::setw(8) << "No Qs" << std::setw(8) << "RxqId" << std::setw(8)
+          << "TxqId" << std::setw(10) << "RxqId_En" << std::setw(10)
+          << "TxqId_En" << std::setw(8) << "Ready" << std::setw(8) << "CtrlId"
+          << std::setw(8) << "RxqFd" << std::setw(8) << "TxqFd" << "CtrlFd";
 
    info() << std::string(110, '-');
 
@@ -178,32 +170,30 @@ void ConfigManager::print_portmap() {
 
          if (i == 0) {
             // First row: Print Port, Vid, No Qs, Ready, CtrlID, and CtrlFd
-            ss << std::left
-               << std::setw(8) << port_id
-               << std::setw(6) << vd.vid
-               << std::setw(8) << vd.nof_queue_pairs
-               << std::setw(8) << vqp.rxq_id
-               << std::setw(8) << vqp.txq_id
-               << std::setw(10) << (vqp.rxq_enabled ? "YES" : "NO")
-               << std::setw(10) << (vqp.txq_enabled ? "YES" : "NO")
-               << std::setw(8)  << (vd.ready ? "YES" : "NO")
-               << std::setw(8)  << vd.ctlq_id
-               << std::setw(8)  << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
-               << std::setw(8)  << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
+            ss << std::left << std::setw(8) << port_id << std::setw(6) << vd.vid
+               << std::setw(8) << vd.nof_queue_pairs << std::setw(8)
+               << vqp.rxq_id << std::setw(8) << vqp.txq_id << std::setw(10)
+               << (vqp.rxq_enabled ? "YES" : "NO") << std::setw(10)
+               << (vqp.txq_enabled ? "YES" : "NO") << std::setw(8)
+               << (vd.ready ? "YES" : "NO") << std::setw(8) << vd.ctlq_id
+               << std::setw(8)
+               << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
+               << std::setw(8)
+               << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
                << pd.ctlq_id;
          } else {
             // Subsequent rows: Leave Port/Vid/NoQs/Ready/CtrlID/CtrlFd empty
-            ss << std::left
-               << std::setw(22) << " " // Port#, Vid, No Qs
-               << std::setw(8)  << vqp.rxq_id
-               << std::setw(8)  << vqp.txq_id
+            ss << std::left << std::setw(22) << " "  // Port#, Vid, No Qs
+               << std::setw(8) << vqp.rxq_id << std::setw(8) << vqp.txq_id
                << std::setw(10) << (vqp.rxq_enabled ? "YES" : "NO")
                << std::setw(10) << (vqp.txq_enabled ? "YES" : "NO")
-               << std::setw(8)  << " " // Ready
-               << std::setw(8)  << " " // CtrlID
-               << std::setw(8)  << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
-               << std::setw(8)  << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
-               << " ";                 // CtrlFd
+               << std::setw(8) << " "  // Ready
+               << std::setw(8) << " "  // CtrlID
+               << std::setw(8)
+               << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
+               << std::setw(8)
+               << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
+               << " ";  // CtrlFd
          }
 
          info() << ss.str();
@@ -212,8 +202,8 @@ void ConfigManager::print_portmap() {
    }
 }
 
-std::tuple<int, uint16_t, uint16_t>
-ConfigManager::get_vhost_qids(int port_id, int q_num) {
+std::tuple<int, uint16_t, uint16_t> ConfigManager::get_vhost_qids(int port_id,
+                                                                  int q_num) {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    auto it = pmap_.find(port_id);
@@ -224,7 +214,8 @@ ConfigManager::get_vhost_qids(int port_id, int q_num) {
 
    const VhostDevice& vd = it->second.vd;
 
-   // Ensure the requested queue number is within the valid range for this device
+   // Ensure the requested queue number is within the valid range for this
+   // device
    if (q_num < 0 || q_num >= vd.nof_queue_pairs) {
       return {-1, 0, 0};
    }
@@ -237,4 +228,4 @@ ConfigManager::get_vhost_qids(int port_id, int q_num) {
    return {vd.vid, rxq, txq};
 }
 
-} // namespace vtb
+}  // namespace vtb

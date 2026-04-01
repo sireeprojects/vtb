@@ -16,4 +16,4 @@ protected:
    void epoll_worker() override;
 };
 
-} // namespace vtb
+}  // namespace vtb

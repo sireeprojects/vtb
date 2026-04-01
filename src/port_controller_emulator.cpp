@@ -19,4 +19,4 @@ void port_controller_emulator::epoll_worker() {
    }
 }
 
-} // namespace vtb
+}  // namespace vtb

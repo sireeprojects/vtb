@@ -1,15 +1,15 @@
 #pragma once
 
-#include "cmdline_parser.h"
-#include "messenger.h"
-#include "common.h"
-
-#include <unordered_map>
-#include <map>
 #include <any>
+#include <map>
 #include <mutex>
 #include <optional>
 #include <tuple>
+#include <unordered_map>
+
+#include "cmdline_parser.h"
+#include "common.h"
+#include "messenger.h"
 
 namespace vtb {
 
@@ -21,23 +21,27 @@ public:
 
    bool init(int argc, char** argv);
 
-   template<typename T>
-   T get_arg(std::string_view name) const { return parser_.get<T>(name); }
-
-   template<typename T>
-   void set_value(const std::string& key, T&& value) {
-      std::lock_guard<std::mutex> lock(db_mutex_);
-      database_[key] = std::make_any<
-         typename std::decay<T>::type>(
-         std::forward<T>(value));
+   template <typename T>
+   T get_arg(std::string_view name) const {
+      return parser_.get<T>(name);
    }
 
-   template<typename T>
+   template <typename T>
+   void set_value(const std::string& key, T&& value) {
+      std::lock_guard<std::mutex> lock(db_mutex_);
+      database_[key] =
+          std::make_any<typename std::decay<T>::type>(std::forward<T>(value));
+   }
+
+   template <typename T>
    std::optional<T> get_value(const std::string& key) const {
       std::lock_guard<std::mutex> lock(db_mutex_);
       auto it = database_.find(key);
       if (it != database_.end()) {
-         try { return std::any_cast<T>(it->second); } catch (...) {}
+         try {
+            return std::any_cast<T>(it->second);
+         } catch (...) {
+         }
       }
       return std::nullopt;
    }
@@ -63,4 +67,4 @@ private:
    mutable std::mutex pmap_mutex_;
 };
 
-} // namespace vtb
+}  // namespace vtb
