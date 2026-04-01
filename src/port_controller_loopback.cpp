@@ -34,6 +34,40 @@ void port_controller_loopback::monitor_and_dispatch_handler() {
    launch_worker();
 }
 
+void port_controller_loopback::process_notification(PortDeviceRingState pdrs) {
+   vtb::info() << "Port Controller Loopback: Received:"
+               << "  device_id: " << pdrs.device_id
+               << "  qid: " << pdrs.qid
+               << "  enable: " << pdrs.enable;
+
+   auto it = pmap_.find(pdrs.device_id);
+
+   if (it != pmap_.end()) { // device exists
+      pmap_[pdrs.device_id][pdrs.qid] = pdrs.enable;
+
+      if (vtb::is_even(pdrs.qid)) {
+         ready_ = ((pmap_[pdrs.device_id][pdrs.qid]==1) &&
+                   (pmap_[pdrs.device_id][pdrs.qid+1]==1));
+         if (ready_) {
+            vtb::details() << "Port Controller Loopback: Even Queues ready: " 
+               << pdrs.qid << ":"<< pdrs.qid+1;
+            vtb::info() << "Port Controller Loopback: Handler called";
+         }
+      } else {
+         ready_ = ((pmap_[pdrs.device_id][pdrs.qid]==1) && 
+                   (pmap_[pdrs.device_id][pdrs.qid-1]==1));
+         if (ready_) {
+            vtb::details() << "Port Controller Loopback: Odd Queues ready: "
+               << pdrs.qid-1 << ":"<< pdrs.qid;
+            vtb::info() << "Port Controller Loopback: Handler called";
+         }
+      }
+   } else {
+      pmap_[pdrs.device_id].resize(8*2, -1); // init each element to -1
+      pmap_[pdrs.device_id][pdrs.qid] = pdrs.enable;
+   }
+}
+
 void port_controller_loopback::epoll_worker() {
    while (is_running_) {
       int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
@@ -50,8 +84,7 @@ void port_controller_loopback::epoll_worker() {
             client_ev.data.fd = client_fd;
             epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
          } else if (events[n].events & EPOLLIN) {
-            PortDeviceRingState pdrs;
-            ssize_t bytes = read(fd, &pdrs, sizeof(pdrs));
+            ssize_t bytes = read(fd, &pdrs_, sizeof(pdrs_));
 
             if (bytes <= 0) {
                vtb::info() << "Port Controller: Disconnected to Vhost "
@@ -60,11 +93,7 @@ void port_controller_loopback::epoll_worker() {
                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
                close(fd);
             } else if (bytes == sizeof(PortDeviceRingState)) {
-               vtb::info() << "Port Controller Loopback: Received:"
-                           << "  port_id: " << pdrs.port_id
-                           << "  device_id: " << pdrs.device_id
-                           << "  qid: " << pdrs.qid
-                           << "  enable: " << pdrs.enable;
+               process_notification(pdrs_);
             }
          }
       }
