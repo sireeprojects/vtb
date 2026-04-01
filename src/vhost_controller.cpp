@@ -28,6 +28,11 @@ VhostController::VhostController(std::string socket_path) : socket_path_{std::mo
    if (!instance_.compare_exchange_strong(expected, this, std::memory_order_acq_rel)) {
       throw std::runtime_error("Vhost Controller: Only one Vhost Controller instance allowed");
    }
+
+   mode_ = vtb::ConfigManager::get_instance().get_arg<std::string>("-m");
+   if (mode_ == "Loopback" || mode_ == "Back2Back") {
+      create_client();
+   }
 }
 
 VhostController::~VhostController() {
@@ -116,7 +121,7 @@ int VhostController::cb_vring_state_changed(int vid, uint16_t queue_id, int enab
 // Device lifecycle hooks
 //------------------------------------------------------------------
 void VhostController::on_new_device(int vid) {
-   RTE_LOG(INFO, VHDEV, "new device vid=%d\n", vid);
+   vtb::info() << "Vhost Controller: New device added with VID: " << vid;
 
     int vring_count = rte_vhost_get_vring_num(vid);
     vtb::details() << "Vhost Controller: Total Number of queues for " << vid << " is " << vring_count 
@@ -134,7 +139,7 @@ void VhostController::on_new_device(int vid) {
 }
 
 void VhostController::on_destroy_device(int vid) {
-   RTE_LOG(INFO, VHDEV, "destroy device vid=%d\n", vid);
+   vtb::info() << "Vhost Controller: Device with VID: " << vid << " removed";
 }
 
 void VhostController::on_vring_state_changed(int vid, uint16_t queue_id, int enable) {
@@ -142,6 +147,27 @@ void VhostController::on_vring_state_changed(int vid, uint16_t queue_id, int ena
                                     << "queue_id=" << queue_id
                                     << "enable=" << enable;
    vtb::ConfigManager::get_instance().set_queue_state(vid, queue_id, enable);
+   notify_port_controller(vid, queue_id, enable);
+}
+
+void VhostController::create_client() {
+   abstract_sockname_ = vtb::ConfigManager::get_instance().get_arg<std::string>("-absn");
+   std::string sock_path = std::string(1, '\0') + abstract_sockname_;
+   vtb::details() << "Vhost Controler: Abstract Socket Name: " << abstract_sockname_;
+
+   if (sock_path.size() > 0 && sock_path[0] == '\0') {
+      vtb::details() << "Verified: First byte is NULL.";
+   }
+   abstract_fd_ = vtb::create_client_socket(sock_path);
+}
+
+bool VhostController::notify_port_controller(int vid, uint16_t queue_id, int enable) {
+   std::lock_guard<std::mutex> lock(notify_mutex_);
+   if (mode_ == "Loopback" || mode_ == "Back2Back") {
+      PortDeviceRingState pdrs = {port_cntr_, vid, queue_id, enable};
+      vtb::send_packet(abstract_fd_, pdrs);
+   }
+   return false;
 }
 
 }

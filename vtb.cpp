@@ -55,6 +55,8 @@ int main(int argc, char** argv) {
    rte_eal_remote_launch(keep_alive, NULL, 2);
    rte_eal_mp_wait_lcore();
 
+   config.print_portmap();
+
    vtb::restore_echoctl();
 
    vtb::info() << "Test Done. Starting cleanup...";

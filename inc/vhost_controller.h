@@ -47,12 +47,19 @@ private:
    static void cb_destroy_device(int vid);
    static int cb_vring_state_changed(int vid, uint16_t queue_id, int enable);
 
+   void create_client();
+   bool notify_port_controller(int vid, uint16_t queue_id, int enable);
+
    std::string socket_path_{};
    bool eal_initialised_{false};
    bool driver_registered_{false};
    static std::atomic<VhostController*> instance_;
-
    static int port_cntr_;
+
+   std::string abstract_sockname_{};
+   int abstract_fd_{-1};
+   std::string mode_{};
+   mutable std::mutex notify_mutex_;
 };
 
 }

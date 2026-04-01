@@ -4,6 +4,9 @@
 #include <memory>
 #include <string_view>
 #include <thread>
+#include <unistd.h>
+
+#include "messenger.h"
 
 namespace vtb {
 
@@ -39,16 +42,49 @@ struct PortMap {
    PortDevice pd;
 };
 
+struct PortDeviceEnables {
+   int port_id;
+   int device_id;
+   int rxdq_id;
+   int txdq_id;
+};
+
+struct PortDeviceRingState {
+   int port_id;
+   int device_id;
+   int qid;
+   int enable;
+};
+
 class port_controller;
 
 // The factory function declaration
 std::unique_ptr<port_controller> create_controller(std::string_view mode);
 
-int create_socket(const std::string& path);
+int create_server_socket(const std::string& path);
+int create_client_socket(const std::string& path);
 
 void set_thread_name(std::thread& th, const std::string& name);
 
 void restore_echoctl();
 void disable_echoctl();
+
+bool is_even(int n);
+bool is_odd(int n);
+
+template <typename T>
+bool send_packet(int fd, const T& data) {
+    ssize_t bytes_sent = write(fd, &data, sizeof(T));
+
+    if (bytes_sent == -1) {
+        perror("write");
+        return false;
+    } else if (static_cast<size_t>(bytes_sent) < sizeof(T)) {
+        // Handle partial writes if necessary for large buffers
+        vtb::info() << "Warning: Partial write occurred";
+        return false;
+    }
+    return true;
+}
 
 }

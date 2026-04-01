@@ -13,9 +13,9 @@ void port_controller_loopback::create_server() {
     vtb::details() << "Verified: First byte is NULL.";
    }
 
-   vtb::info() << "Started Loopback Controller with " << abstract_sockname_;
+   vtb::info() << "Port Controller: Started Loopback Controller with " << abstract_sockname_;
    
-   abstract_fd_ = vtb::create_socket(sock_path);
+   abstract_fd_ = vtb::create_server_socket(sock_path);
    // close(abstract_fd_);
 }
 
@@ -25,7 +25,7 @@ void port_controller_loopback::monitor_and_dispatch_handler() {
    ev.events = EPOLLIN;
    ev.data.fd = abstract_fd_;
    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, abstract_fd_, &ev);
-   vtb::info() << "Launching epoll worker";
+   vtb::info() << "Port Controller: Launching epoll worker";
    launch_worker();
 }
 
@@ -37,23 +37,26 @@ void port_controller_loopback::epoll_worker() {
 
            if (fd == abstract_fd_) {
                int client_fd = accept(abstract_fd_, NULL, NULL);
-               vtb::info()<< "New Client FD: " << client_fd;
+               vtb::info()<< "Port Controller: Connected to Vhost Controller with Fd: " << client_fd;
                struct epoll_event client_ev;
                client_ev.events = EPOLLIN | EPOLLRDHUP;
                client_ev.data.fd = client_fd;
                epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
            } 
            else if (events[n].events & EPOLLIN) {
-               char buffer[BUFFER_SIZE];
-               ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
+               PortDeviceRingState pdrs;
+               ssize_t bytes = read(fd, &pdrs, sizeof(pdrs));
                
                if (bytes <= 0) {
-                    vtb::info()<< "Client " << fd << " disconnected.";
-                   epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
-                   close(fd);
-               } else {
-                   buffer[bytes] = '\0';
-                   vtb::info() << "Received: " << buffer;
+                  vtb::info()<< "Port Controller: Disconnected to Vhost Controller with Fd: " << fd;
+                  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+                  close(fd);
+               } else if (bytes == sizeof(PortDeviceRingState)) {
+                  vtb::info()<< "Port Controller Loopback: Received:"
+                     << "  port_id: " << pdrs.port_id
+                     << "  device_id: " << pdrs.device_id
+                     << "  qid: " << pdrs.qid
+                     << "  enable: " << pdrs.enable;
                }
            }
        }
