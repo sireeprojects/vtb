@@ -1,20 +1,20 @@
+#include <csignal>
+
 #include "cmdline_parser.h"
+#include "common.h"
 #include "config_manager.h"
-#include "vhost_controller.h"
-#include "port_controller_loopback.h"
 #include "logger.h"
 #include "messenger.h"
-#include "common.h"
-
-#include <csignal>
+#include "port_controller_loopback.h"
+#include "vhost_controller.h"
 
 bool stop_blocking_{false};
 
 static int keep_alive(void*) {
-    while (!stop_blocking_) {
-        rte_pause();
-    }
-    return 0;
+   while (!stop_blocking_) {
+      rte_pause();
+   }
+   return 0;
 }
 
 static void signal_handler(int) {
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
    vtb::disable_echoctl();
 
    // assign signal handler for graceful exit
-   std::signal(SIGINT,  signal_handler);
+   std::signal(SIGINT, signal_handler);
    std::signal(SIGTERM, signal_handler);
 
    // setup logger
@@ -41,12 +41,13 @@ int main(int argc, char** argv) {
 
    // start the appropriate port controller
    auto mode = config.get_arg<std::string>("-m");
-   std::unique_ptr<vtb::port_controller> port_controller = vtb::create_controller(mode);
+   std::unique_ptr<vtb::port_controller> port_controller =
+       vtb::create_controller(mode);
 
    port_controller->start();
 
    // start vhost controller
-   auto socket_path  = config.get_arg<std::string>("-vsn");
+   auto socket_path = config.get_arg<std::string>("-vsn");
    vtb::VhostController backend(socket_path.c_str());
 
    backend.init(argc, argv);
@@ -63,25 +64,22 @@ int main(int argc, char** argv) {
    return 0;
 }
 
+// vhost and eal messages to just errors
+// rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
+// rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
 
-   // vhost and eal messages to just errors
-   // rte_log_set_level_pattern("lib.vhost.config", RTE_LOG_ERR);
-   // rte_log_set_level_pattern("lib.eal", RTE_LOG_ERR);
+// config.dump_config();
+// check vhost devices and queues for ports
+// config.print_portmap();
 
-   // config.dump_config();
-   // check vhost devices and queues for ports
-   // config.print_portmap();
+// auto absn = config.get_arg<std::string>("-absn");
+// vtb::info() << "Abstract Socket Name: " << absn;
 
+// auto pdsn = config.get_arg<std::string>("-pdsn");
+// vtb::info() << "Port Data Socket Name: " << pdsn;
 
-   // auto absn = config.get_arg<std::string>("-absn");
-   // vtb::info() << "Abstract Socket Name: " << absn;
+// auto pcsn = config.get_arg<std::string>("-pcsn");
+// vtb::info() << "Port Control Socket Name: " << pcsn;
 
-   // auto pdsn = config.get_arg<std::string>("-pdsn");
-   // vtb::info() << "Port Data Socket Name: " << pdsn;
-
-   // auto pcsn = config.get_arg<std::string>("-pcsn");
-   // vtb::info() << "Port Control Socket Name: " << pcsn;
-
-   // auto vsn  = config.get_arg<std::string>("-vsn");
-   // vtb::info() << "Vhost Socket Name: " << vsn;
-
+// auto vsn  = config.get_arg<std::string>("-vsn");
+// vtb::info() << "Vhost Socket Name: " << vsn;

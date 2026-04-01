@@ -1,13 +1,13 @@
-#include "cmdline_parser.h"
-#include "config_manager.h"
-#include "vhost_controller.h"
-
-#include "logger.h"
-#include "messenger.h"
-
-#include <csignal>
 #include <termios.h>
 #include <unistd.h>
+
+#include <csignal>
+
+#include "cmdline_parser.h"
+#include "config_manager.h"
+#include "logger.h"
+#include "messenger.h"
+#include "vhost_controller.h"
 
 using namespace vtb;
 
@@ -24,15 +24,13 @@ static void disable_echoctl() {
    tcsetattr(STDIN_FILENO, TCSANOW, &new_t);
 }
 
-static void restore_echoctl() {
-   tcsetattr(STDIN_FILENO, TCSANOW, &old_t);
-}
+static void restore_echoctl() { tcsetattr(STDIN_FILENO, TCSANOW, &old_t); }
 
 static int worker_thread(void*) {
-    while (!stop_blocking_) {
-        rte_pause();
-    }
-    return 0;
+   while (!stop_blocking_) {
+      rte_pause();
+   }
+   return 0;
 }
 
 static void signal_handler(int) {
@@ -51,9 +49,9 @@ int main(int argc, char** argv) {
    if (!config.init(argc, argv)) {
       return -1;
    }
-   
+
    // assign signal handler for graceful exit
-   std::signal(SIGINT,  signal_handler);
+   std::signal(SIGINT, signal_handler);
    std::signal(SIGTERM, signal_handler);
 
    // vhost and eal messages to just errors

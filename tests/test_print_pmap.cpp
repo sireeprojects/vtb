@@ -9,9 +9,9 @@ int main(int argc, char** argv) {
 
    // 2. Initialize ConfigManager (Simulating CLI: --portmask 0x1)
    auto& config = vtb::ConfigManager::get_instance();
-   
+
    // Providing dummy arguments for the parser
-   const char* dummy_argv[] = { "vtb_app", "--", "--portmask", "0x1" };
+   const char* dummy_argv[] = {"vtb_app", "--", "--portmask", "0x1"};
    if (!config.init(4, const_cast<char**>(dummy_argv))) {
       return -1;
    }
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
    // 4. Assign Socket FDs (Simulating backend connection)
    // Assigning a dummy FD (e.g., 50) to the first queue pair
    config.assign_port_socket(port_0, 0, 50);
-   
+
    // 5. Assign Control Path
    // Logical control ID 100
    config.assign_control_path(port_0, 100);
@@ -45,10 +45,6 @@ int main(int argc, char** argv) {
    config.print_portmap();
 
    vtb::info() << "Demonstration Complete.";
-
-
-
-
 
    return 0;
 }

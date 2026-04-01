@@ -2,10 +2,11 @@
 #include "cmdline_parser.h"
 #include "config_manager.h"
 // #include "port_handler.h"
-#include "vhost_controller.h"
+#include <vector>
+
 #include "logger.h"
 #include "messenger.h"
-#include <vector>
+#include "vhost_controller.h"
 
 // A custom structure to demonstrate complex type storage
 struct PortStats {
@@ -15,7 +16,6 @@ struct PortStats {
 };
 
 int main(int argc, char** argv) {
-
    // 1. Setup Logger
    vtb::Logger::get_instance().init("dpdk_app.log", vtb::LogLevel::FULL);
 
@@ -39,12 +39,9 @@ int main(int argc, char** argv) {
       int burst = config.get_arg<int>("--burst");
       bool promisc = config.get_arg<bool>("--promisc");
 
-      vtb::info() << "CLI: Portmask="
-         << std::hex << pmask
-         << " Mode=" << mode
-         << " Burst=" << std::dec << burst
-         << " Promisc="
-         << (promisc ? "ON" : "OFF");
+      vtb::info() << "CLI: Portmask=" << std::hex << pmask << " Mode=" << mode
+                  << " Burst=" << std::dec << burst
+                  << " Promisc=" << (promisc ? "ON" : "OFF");
    } catch (...) {
       vtb::error() << "Failed to fetch one or more CLI arguments.";
    }
@@ -71,7 +68,7 @@ int main(int argc, char** argv) {
    //----------------------------------------------------------------
 
    // 5. Demonstrate Complex/Custom Types
-   PortStats eth0_stats = { 1500000, 1200000, 0.001 };
+   PortStats eth0_stats = {1500000, 1200000, 0.001};
    config.set_value("stats_port_0", eth0_stats);
 
    //----------------------------------------------------------------
@@ -85,23 +82,17 @@ int main(int argc, char** argv) {
 
    // Type mismatch protection test
    // Trying to get int as string
-   auto failed_cast =
-      config.get_value<std::string>("max_lcores");
+   auto failed_cast = config.get_value<std::string>("max_lcores");
    if (!failed_cast) {
-      vtb::details()
-         << "Safety Check: Correctly blocked"
-         << " invalid type cast for"
-         << " 'max_lcores'.";
+      vtb::details() << "Safety Check: Correctly blocked"
+                     << " invalid type cast for" << " 'max_lcores'.";
    }
 
    // Custom struct retrieval
    auto stats = config.get_value<PortStats>("stats_port_0");
    if (stats) {
-      vtb::info()
-         << "Port 0 Stats - RX: "
-         << stats->rx_packets
-         << " Error Rate: "
-         << stats->error_rate;
+      vtb::info() << "Port 0 Stats - RX: " << stats->rx_packets
+                  << " Error Rate: " << stats->error_rate;
    }
 
    //----------------------------------------------------------------
@@ -111,22 +102,21 @@ int main(int argc, char** argv) {
 
    vtb::info() << "Application Setup Complete.";
 
-
    // 3. Populate Port Map (Simulating Device Connection)
    // Port 0, Virtual ID 10, 2 Queue Pairs
    int port_0 = 0;
    int vid_0 = 10;
    config.init_vhost_device(port_0, vid_0, 8);
-   config.init_vhost_device(port_0+1, vid_0+1, 8);
+   config.init_vhost_device(port_0 + 1, vid_0 + 1, 8);
 
    config.assign_port_data_socket(port_0, 0, 50);
    config.assign_port_data_socket(port_0, 1, 51);
 
-   config.assign_port_data_socket(port_0+1, 0, 50);
-   config.assign_port_data_socket(port_0+1, 1, 51);
+   config.assign_port_data_socket(port_0 + 1, 0, 50);
+   config.assign_port_data_socket(port_0 + 1, 1, 51);
 
    config.assign_port_control_socket(port_0, 100);
-   config.assign_port_control_socket(port_0+1, 101);
+   config.assign_port_control_socket(port_0 + 1, 101);
 
    config.set_queue_state(port_0, 0, true);
    config.set_queue_state(port_0, 3, true);
@@ -135,28 +125,25 @@ int main(int argc, char** argv) {
    vtb::info() << "Displaying Configured Port Map:";
    config.print_portmap();
 
-
    //------------------------------------------------
    //
    int port_id = 1;
    int queue_number = 5;
-   
+
    // Retrieve the values
    auto [vid, rx_id, tx_id] = config.get_vhost_qids(port_id, queue_number);
 
    if (vid != -1) {
-      vtb::info() << "Mapping for Port " << port_id << " Queue " << queue_number << ":";
+      vtb::info() << "Mapping for Port " << port_id << " Queue " << queue_number
+                  << ":";
       vtb::info() << "  VID      : " << vid;
-      vtb::info() << "  Vhost RX : " << rx_id; // Will be 6
-      vtb::info() << "  Vhost TX : " << tx_id; // Will be 7
+      vtb::info() << "  Vhost RX : " << rx_id;  // Will be 6
+      vtb::info() << "  Vhost TX : " << tx_id;  // Will be 7
    } else {
       vtb::error() << "Port " << port_id << " not found in configuration.";
    }
 
    vtb::info() << "Demonstration Complete.";
-
-
-
 
    return 0;
 }
