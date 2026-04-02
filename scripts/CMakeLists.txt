@@ -46,5 +46,25 @@ target_link_libraries(vtb_app PRIVATE
 
 # --- 8. Output Configuration ---
 set_target_properties(vtb_app PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJ_ROOT}"
+    RUNTIME_OUTPUT_DIRECTORY "."
 )
+
+# set_target_properties(vtb_app PROPERTIES
+#     RUNTIME_OUTPUT_DIRECTORY "${PROJ_ROOT}"
+# )
+
+# --- 9. Custom Run Target ---
+# add_custom_target(run
+#     COMMAND ./vtb_app -l 1-2 --file-prefix=vhost_backend --no-pci --no-telemetry
+#             --log-level=lib.vhost.config:3
+#             --log-level=lib.eal:3
+#             -- --help
+#             --mode Loopback
+#             --abstract_sockname absockname
+#             --port_data_sockname datasockname
+#             --port_control_sockname controlsockname
+#             --vhost_sockname /tmp/vhost-user.sock || true
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#     COMMENT "Executing vtb_app with DPDK vhost-user loopback configuration"
+#     USES_TERMINAL
+# )
