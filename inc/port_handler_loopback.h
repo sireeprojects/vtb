@@ -2,6 +2,8 @@
 
 #include "port_handler.h"
 
+#include <rte_ring.h>
+
 namespace vtb {
 
 /**

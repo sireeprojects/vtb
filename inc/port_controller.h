@@ -6,6 +6,7 @@
 #include "config_manager.h"
 #include "messenger.h"
 #include "port_handler.h"
+#include "port_handler_loopback.h"
 
 namespace vtb {
 
@@ -26,7 +27,6 @@ protected:
    std::atomic<bool> is_running_;
    std::thread worker_;
 
-private:
    std::unique_ptr<vtb::PortHandler> port_handler_;
 };
 

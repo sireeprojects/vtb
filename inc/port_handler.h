@@ -6,6 +6,8 @@
 #include <thread>
 #include <stdexcept>
 #include <cstdint>
+#include <unistd.h>
+#include "messenger.h"
 
 namespace vtb {
 
@@ -23,7 +25,7 @@ public:
    PortHandler& operator=(const PortHandler&) = delete;
 
    // Starts both transmit and receive threads.
-   virtual void start();
+   virtual void start() = 0;
 
    // Signals both threads to stop.
    void stop();
@@ -50,17 +52,27 @@ protected:
    virtual void rx_worker() = 0;
    virtual void tx_rx_worker() = 0;
 
-   std::atomic<bool> is_running_;
+   std::atomic<bool> is_running_{false};
+
+   // used in two thread model only
+   // used in both loopback/back2back model
    std::thread tx_thread_;
    std::thread rx_thread_;
+
+   // used in single thread model only
    std::thread tx_rx_thread_;
 
+   // used in both single/two thread model
+   // used in both loopback/back2back model
    struct rte_mempool *tx_mbuf_pool_;
    struct rte_mempool *rx_mbuf_pool_;
-   struct rte_mempool *tx_rx_mbuf_pool_;
 
+   // used in back2back model only
    struct rte_ring *tx_ring_;
    struct rte_ring *rx_ring_;
+
+   // used in single/two thread model
+   // used in loopback only
    struct rte_ring *tx_rx_ring_;
 
    // statistics counters
@@ -69,6 +81,7 @@ protected:
    // TODO add if any other data needs to be captured
 
    // performance statistics
+   // TODO
 };
 
 } // namespace vtb

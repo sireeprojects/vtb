@@ -26,7 +26,7 @@ static void signal_handler(int signum) {
    force_quit = true;
 }
 
-static constexpr int num_ports = 4;
+static constexpr int num_ports = 1;
 
 class CustomFrontend {
 public:

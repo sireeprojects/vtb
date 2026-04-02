@@ -51,7 +51,7 @@ void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
          if (ready_) {
             vtb::details() << "Port Controller Loopback: Even Queues ready: " 
                << pdrs.qid << ":"<< pdrs.qid+1;
-            vtb::info() << "Port Controller Loopback: Handler called";
+            vtb::info() << "Port Controller Loopback: Even Handler called";
          }
       } else {
          ready_ = ((pmap_[pdrs.device_id][pdrs.qid]==1) && 
@@ -59,7 +59,8 @@ void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
          if (ready_) {
             vtb::details() << "Port Controller Loopback: Odd Queues ready: "
                << pdrs.qid-1 << ":"<< pdrs.qid;
-            vtb::info() << "Port Controller Loopback: Handler called";
+            vtb::info() << "Port Controller Loopback: Odd Handler called";
+            port_handler_->start(); 
          }
       }
    } else {
