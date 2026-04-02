@@ -147,7 +147,7 @@ void VhostController::on_destroy_device(int vid) {
 void VhostController::on_vring_state_changed(int vid, uint16_t queue_id,
                                              int enable) {
    vtb::details() << "Vhost Controller: vring state changed vid=" << vid
-                  << "queue_id=" << queue_id << "enable=" << enable;
+                  << "queue_id=" << queue_id << " enable=" << enable;
    vtb::ConfigManager::get_instance().set_queue_state(vid, queue_id, enable);
    notify_port_controller(vid, queue_id, enable);
 }

@@ -30,7 +30,8 @@ int main(int argc, char** argv) {
    std::signal(SIGTERM, signal_handler);
 
    // setup logger
-   vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
+   // vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
+   vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
 
    // setup configuration manager
    auto& config = vtb::ConfigManager::get_instance();

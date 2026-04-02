@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <unistd.h>
 
 // DPDK Includes
 #include <rte_config.h>
@@ -24,6 +25,10 @@ static volatile bool force_quit = false;
 static void signal_handler(int signum) {
    (void)signum;
    force_quit = true;
+      // sleep(5);
+      rte_eth_dev_rx_queue_stop(0,0);
+      rte_eth_dev_tx_queue_stop(0,0);
+      rte_eth_dev_stop(0);
 }
 
 static constexpr int num_ports = 1;
@@ -88,32 +93,13 @@ public:
             throw std::runtime_error("Failed to setup TX queue");
       }
 
-      //        // Setup RX Queue 1
-      //        if (rte_eth_rx_queue_setup(port_id, 1, 1024,
-      //        rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
-      //            throw std::runtime_error("Failed to setup RX queue");
-      //
-      //        // Setup TX Queue 1
-      //        if (rte_eth_tx_queue_setup(port_id, 1, 1024,
-      //        rte_eth_dev_socket_id(port_id), NULL) < 0)
-      //            throw std::runtime_error("Failed to setup TX queue");
-      //
-      //        // Setup RX Queue 2
-      //        if (rte_eth_rx_queue_setup(port_id, 2, 1024,
-      //        rte_eth_dev_socket_id(port_id), NULL, mbuf_pool_) < 0)
-      //            throw std::runtime_error("Failed to setup RX queue");
-      //
-      //        // Setup TX Queue 2
-      //        if (rte_eth_tx_queue_setup(port_id, 2, 1024,
-      //        rte_eth_dev_socket_id(port_id), NULL) < 0)
-      //            throw std::runtime_error("Failed to setup TX queue");
-
       // Start Port
       if (rte_eth_dev_start(port_id) < 0)
          throw std::runtime_error("Failed to start port");
 
       std::cout << ">>> Port " << port_id << " initialized and started."
                 << std::endl;
+
    }
 
    void run() {
@@ -183,6 +169,7 @@ int main(int argc, char** argv) {
    try {
       CustomFrontend app(argc, argv);
       app.run();
+
    } catch (const std::exception& e) {
       std::cerr << "CRITICAL: " << e.what() << std::endl;
       return 1;
