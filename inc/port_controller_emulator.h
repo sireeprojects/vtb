@@ -5,10 +5,10 @@
 namespace vtb {
 
 // Derived controller for emulator socket communication.
-class port_controller_emulator : public port_controller {
+class PortControllerEmulator : public PortController {
 public:
-   port_controller_emulator();
-   virtual ~port_controller_emulator() = default;
+   PortControllerEmulator();
+   virtual ~PortControllerEmulator() = default;
 
 protected:
    void create_server() override;

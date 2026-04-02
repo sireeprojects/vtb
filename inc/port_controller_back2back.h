@@ -5,10 +5,10 @@
 namespace vtb {
 
 // Derived controller for back2back socket communication.
-class port_controller_back2back : public port_controller {
+class PortControllerBack2Back : public PortController {
 public:
-   port_controller_back2back();
-   virtual ~port_controller_back2back() = default;
+   PortControllerBack2Back();
+   virtual ~PortControllerBack2Back() = default;
 
 protected:
    void create_server() override;

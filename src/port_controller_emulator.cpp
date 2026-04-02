@@ -2,19 +2,19 @@
 
 namespace vtb {
 
-port_controller_emulator::port_controller_emulator() : port_controller() {
+PortControllerEmulator::PortControllerEmulator() : PortController() {
    // start();
 }
 
-void port_controller_emulator::create_server() {
+void PortControllerEmulator::create_server() {
    vtb::info() << "Started Emulator Controller";
 }
 
-void port_controller_emulator::monitor_and_dispatch_handler() {
+void PortControllerEmulator::monitor_and_dispatch_handler() {
    launch_worker();
 }
 
-void port_controller_emulator::epoll_worker() {
+void PortControllerEmulator::epoll_worker() {
    while (is_running_) {
    }
 }

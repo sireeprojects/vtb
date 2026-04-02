@@ -2,19 +2,19 @@
 
 namespace vtb {
 
-port_controller_back2back::port_controller_back2back() : port_controller() {
+PortControllerBack2Back::PortControllerBack2Back() : PortController() {
    // start();
 }
 
-void port_controller_back2back::create_server() {
+void PortControllerBack2Back::create_server() {
    vtb::info() << "Started Back-to-back Controller";
 }
 
-void port_controller_back2back::monitor_and_dispatch_handler() {
+void PortControllerBack2Back::monitor_and_dispatch_handler() {
    launch_worker();
 }
 
-void port_controller_back2back::epoll_worker() {
+void PortControllerBack2Back::epoll_worker() {
    while (is_running_) {
    }
 }

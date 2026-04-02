@@ -2,9 +2,12 @@
 
 namespace vtb {
 
-port_controller::port_controller() : is_running_(false) {}
+PortController::PortController() : is_running_(false) {
+   // port_handler_ = 
+      // std::make_unique<vtb::port_handler>();
+}
 
-port_controller::~port_controller() {
+PortController::~PortController() {
    vtb::info() << "Cleanup: Port Controller";
    is_running_ = false;
    if (worker_.joinable()) {
@@ -12,15 +15,15 @@ port_controller::~port_controller() {
    }
 }
 
-void port_controller::start() {
+void PortController::start() {
    create_server();
    monitor_and_dispatch_handler();
 }
 
-void port_controller::launch_worker() {
+void PortController::launch_worker() {
    if (!is_running_) {
       is_running_ = true;
-      worker_ = std::thread(&port_controller::epoll_worker, this);
+      worker_ = std::thread(&PortController::epoll_worker, this);
       vtb::set_thread_name(worker_, "epollWorker");
       worker_.detach();
    }

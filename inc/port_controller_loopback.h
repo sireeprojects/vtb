@@ -11,10 +11,10 @@
 namespace vtb {
 
 // Derived controller for loopback socket communication.
-class port_controller_loopback : public port_controller {
+class PortControllerLoopback : public PortController {
 public:
-   port_controller_loopback();
-   virtual ~port_controller_loopback();
+   PortControllerLoopback();
+   virtual ~PortControllerLoopback();
 
 protected:
    void create_server() override;

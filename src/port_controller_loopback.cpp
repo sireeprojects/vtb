@@ -2,14 +2,14 @@
 
 namespace vtb {
 
-port_controller_loopback::port_controller_loopback() : port_controller() {
+PortControllerLoopback::PortControllerLoopback() : PortController() {
 }
 
-port_controller_loopback::~port_controller_loopback() {
+PortControllerLoopback::~PortControllerLoopback() {
    close(abstract_fd_); // TODO check fd before closing
 }
 
-void port_controller_loopback::create_server() {
+void PortControllerLoopback::create_server() {
    abstract_sockname_ =
        vtb::ConfigManager::get_instance().get_arg<std::string>("-absn");
    std::string sock_path = std::string(1, '\0') + abstract_sockname_;
@@ -24,7 +24,7 @@ void port_controller_loopback::create_server() {
    abstract_fd_ = vtb::create_server_socket(sock_path);
 }
 
-void port_controller_loopback::monitor_and_dispatch_handler() {
+void PortControllerLoopback::monitor_and_dispatch_handler() {
    listen(abstract_fd_, 5);
    epoll_fd = epoll_create1(0);
    ev.events = EPOLLIN;
@@ -34,7 +34,7 @@ void port_controller_loopback::monitor_and_dispatch_handler() {
    launch_worker();
 }
 
-void port_controller_loopback::process_notification(PortDeviceRingState pdrs) {
+void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
    vtb::info() << "Port Controller Loopback: Received:"
                << "  device_id: " << pdrs.device_id
                << "  qid: " << pdrs.qid
@@ -68,7 +68,7 @@ void port_controller_loopback::process_notification(PortDeviceRingState pdrs) {
    }
 }
 
-void port_controller_loopback::epoll_worker() {
+void PortControllerLoopback::epoll_worker() {
    while (is_running_) {
       int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
       for (int n = 0; n < nfds; ++n) {

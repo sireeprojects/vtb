@@ -16,15 +16,15 @@
 
 namespace vtb {
 
-std::unique_ptr<port_controller> create_controller(std::string_view mode) {
+std::unique_ptr<PortController> create_controller(std::string_view mode) {
    if (mode == "Loopback") {
-      return std::make_unique<port_controller_loopback>();
+      return std::make_unique<PortControllerLoopback>();
    }
    if (mode == "Back2Back") {
-      return std::make_unique<port_controller_back2back>();
+      return std::make_unique<PortControllerBack2Back>();
    }
    if (mode == "Emulator") {
-      return std::make_unique<port_controller_emulator>();
+      return std::make_unique<PortControllerEmulator>();
    }
    // TODO add error message here
    return nullptr;

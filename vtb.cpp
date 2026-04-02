@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
    // start the appropriate port controller
    auto mode = config.get_arg<std::string>("-m");
-   std::unique_ptr<vtb::port_controller> port_controller =
+   std::unique_ptr<vtb::PortController> port_controller =
        vtb::create_controller(mode);
 
    port_controller->start();

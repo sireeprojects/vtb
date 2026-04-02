@@ -5,15 +5,16 @@
 
 #include "config_manager.h"
 #include "messenger.h"
+#include "port_handler.h"
 
 namespace vtb {
 
-class port_controller {
+class PortController {
 public:
-   port_controller();
-   virtual ~port_controller();
-   port_controller(const port_controller&) = delete;
-   port_controller& operator=(const port_controller&) = delete;
+   PortController();
+   virtual ~PortController();
+   PortController(const PortController&) = delete;
+   PortController& operator=(const PortController&) = delete;
    void start();
 
 protected:
@@ -24,6 +25,9 @@ protected:
 
    std::atomic<bool> is_running_;
    std::thread worker_;
+
+private:
+   std::unique_ptr<vtb::PortHandler> port_handler_;
 };
 
 }  // namespace vtb
