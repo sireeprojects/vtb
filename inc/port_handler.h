@@ -5,6 +5,7 @@
 #include <atomic>
 #include <thread>
 #include <stdexcept>
+#include <cstdint>
 
 namespace vtb {
 
@@ -44,11 +45,10 @@ protected:
    virtual void create_rx_vm_metadata() = 0;
    virtual void enqueue_rx_packets() = 0;
 
-private:
    // Thread entry points — run the pipeline loops.
-   void tx_worker();
-   void rx_worker();
-   void tx_rx_worker();
+   virtual void tx_worker() = 0;
+   virtual void rx_worker() = 0;
+   virtual void tx_rx_worker() = 0;
 
    std::atomic<bool> is_running_;
    std::thread tx_thread_;
@@ -62,6 +62,13 @@ private:
    struct rte_ring *tx_ring_;
    struct rte_ring *rx_ring_;
    struct rte_ring *tx_rx_ring_;
+
+   // statistics counters
+   uint64_t tx_pkt_cnt_{0};
+   uint64_t rx_pkt_cnt_{0};
+   // TODO add if any other data needs to be captured
+
+   // performance statistics
 };
 
 } // namespace vtb

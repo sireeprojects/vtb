@@ -53,16 +53,4 @@ void PortHandler::stop() {
    is_running_ = false;
 }
 
-// Runs the TX pipeline in a loop.
-void PortHandler::tx_worker() {
-   while (is_running_) {
-   }
-}
-
-// Runs the RX pipeline in a loop.
-void PortHandler::rx_worker() {
-   while (is_running_) {
-   }
-}
-
 } // namespace vtb
