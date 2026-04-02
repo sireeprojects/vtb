@@ -89,6 +89,8 @@ void ConfigManager::init_vhost_device(int port_id, int vid, int nof_pairs) {
       pm.vd.qp[i].rxq_enabled = false;
       pm.vd.qp[i].txq_enabled = false;
 
+      pm.vd.qpid[i] = i;
+
       // Initialize port fds to -1 (not connected yet)
       pm.pd.qp[i].rxq_id = -1;
       pm.pd.qp[i].txq_id = -1;
@@ -150,11 +152,19 @@ void ConfigManager::print_portmap() {
    std::lock_guard<std::mutex> lock(pmap_mutex_);
 
    // Table Header
-   info() << std::left << std::setw(8) << "Port#" << std::setw(6) << "Vid"
-          << std::setw(8) << "No Qs" << std::setw(8) << "RxqId" << std::setw(8)
-          << "TxqId" << std::setw(10) << "RxqId_En" << std::setw(10)
-          << "TxqId_En" << std::setw(8) << "Ready" << std::setw(8) << "CtrlId"
-          << std::setw(8) << "RxqFd" << std::setw(8) << "TxqFd" << "CtrlFd";
+   info() << std::left << std::setw(8) << "Port#" 
+                       << std::setw(6) << "Vid"
+                       << std::setw(8) << "No Qs" 
+                       << std::setw(8) << "QpID" 
+                       << std::setw(8) << "RxqId" 
+                       << std::setw(8) << "TxqId" 
+                       << std::setw(10) << "RxqId_En" 
+                       << std::setw(10) << "TxqId_En" 
+                       << std::setw(8) << "Ready" 
+                       << std::setw(8) << "CtrlId"
+                       << std::setw(8) << "RxqFd" 
+                       << std::setw(8) << "TxqFd" 
+                       << "CtrlFd";
 
    info() << std::string(110, '-');
 
@@ -165,25 +175,29 @@ void ConfigManager::print_portmap() {
       for (int i = 0; i < vd.nof_queue_pairs; ++i) {
          const auto& vqp = vd.qp[i];
          const auto& pqp = pd.qp[i];
+         const auto& qpid = vd.qpid[i];
 
          std::stringstream ss;
 
          if (i == 0) {
             // First row: Print Port, Vid, No Qs, Ready, CtrlID, and CtrlFd
-            ss << std::left << std::setw(8) << port_id << std::setw(6) << vd.vid
-               << std::setw(8) << vd.nof_queue_pairs << std::setw(8)
-               << vqp.rxq_id << std::setw(8) << vqp.txq_id << std::setw(10)
-               << (vqp.rxq_enabled ? "YES" : "NO") << std::setw(10)
-               << (vqp.txq_enabled ? "YES" : "NO") << std::setw(8)
-               << (vd.ready ? "YES" : "NO") << std::setw(8) << vd.ctlq_id
-               << std::setw(8)
-               << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
-               << std::setw(8)
-               << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
+            ss << std::left << std::setw(8) << port_id 
+               << std::setw(6) << vd.vid
+               << std::setw(8) << vd.nof_queue_pairs 
+               << std::setw(8) << qpid 
+               << std::setw(8) << vqp.rxq_id 
+               << std::setw(8) << vqp.txq_id 
+               << std::setw(10) << (vqp.rxq_enabled ? "YES" : "NO") 
+               << std::setw(10) << (vqp.txq_enabled ? "YES" : "NO") 
+               << std::setw(8) << (vd.ready ? "YES" : "NO") 
+               << std::setw(8) << vd.ctlq_id
+               << std::setw(8) << (pqp.rxq_id == -1 ? "-" : std::to_string(pqp.rxq_id))
+               << std::setw(8) << (pqp.txq_id == -1 ? "-" : std::to_string(pqp.txq_id))
                << pd.ctlq_id;
          } else {
             // Subsequent rows: Leave Port/Vid/NoQs/Ready/CtrlID/CtrlFd empty
             ss << std::left << std::setw(22) << " "  // Port#, Vid, No Qs
+               << std::setw(8) << qpid 
                << std::setw(8) << vqp.rxq_id << std::setw(8) << vqp.txq_id
                << std::setw(10) << (vqp.rxq_enabled ? "YES" : "NO")
                << std::setw(10) << (vqp.txq_enabled ? "YES" : "NO")

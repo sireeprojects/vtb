@@ -5,7 +5,7 @@ run:
 	@./frontend -l 3-4 \
       --file-prefix=virtio_frontend \
       --no-telemetry \
-      --vdev="net_virtio_user0,path=/tmp/vhost-user.sock,server=0,queues=1,mac=00:11:22:33:44:54"
+      --vdev="net_virtio_user0,path=/tmp/vhost-user.sock,server=0,queues=8,mac=00:11:22:33:44:54"
 
 clean:
 	@rm -f backend frontend
