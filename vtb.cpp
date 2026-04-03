@@ -22,6 +22,13 @@ static void signal_handler(int) {
    stop_blocking_ = true;
 }
 
+// CHECK
+void my_graceful_exit() {
+    // Note: We don't have access to the 'runtime_error' object here easily
+    vtb::error() << "A fatal error occurred. Shutting down gracefully...";
+    std::exit(1);
+}
+
 int main(int argc, char** argv) {
    vtb::disable_echoctl();
 
@@ -32,6 +39,8 @@ int main(int argc, char** argv) {
    // setup logger
    // vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
    vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
+
+   std::set_terminate(my_graceful_exit);
 
    // setup configuration manager
    auto& config = vtb::ConfigManager::get_instance();
