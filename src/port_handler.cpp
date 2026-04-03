@@ -15,8 +15,7 @@ PortHandler::PortHandler() : is_running_{false},
                              tx_mbuf_pool_{nullptr},
                              rx_mbuf_pool_{nullptr},
                              tx_ring_{nullptr},
-                             rx_ring_{nullptr},
-                             tx_rx_ring_{nullptr}
+                             rx_ring_{nullptr}
 {
 }
 

@@ -14,6 +14,8 @@ ConfigManager::ConfigManager() {
    parser_.add_argument("--help", "-h", "Show this help menu", false, "false");
    parser_.add_argument("--mode", "-m", "Loopback | Back2Back | Emulator",
                         false, "Loopback");
+   parser_.add_argument("--mode-threads", "-mth", "1 | 2",
+                        false, "1");
    parser_.add_argument("--abstract_sockname", "-absn",
                         "Specify a random name. For internal use only", false,
                         "cm_to_ph_sock");

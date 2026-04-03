@@ -34,41 +34,6 @@ void PortControllerLoopback::monitor_and_dispatch_handler() {
    launch_worker();
 }
 
-void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
-   vtb::info() << "Port Controller Loopback: Received:"
-               << "  device_id: " << pdrs.device_id
-               << "  qid: " << pdrs.qid
-               << "  enable: " << pdrs.enable;
-
-   auto it = pmap_.find(pdrs.device_id);
-
-   if (it != pmap_.end()) { // device exists
-      pmap_[pdrs.device_id][pdrs.qid] = pdrs.enable;
-
-      if (vtb::is_even(pdrs.qid)) {
-         ready_ = ((pmap_[pdrs.device_id][pdrs.qid]==1) &&
-                   (pmap_[pdrs.device_id][pdrs.qid+1]==1));
-         if (ready_) {
-            vtb::details() << "Port Controller Loopback: Even Queues ready: " 
-               << pdrs.qid << ":"<< pdrs.qid+1;
-            vtb::info() << "Port Controller Loopback: Even Handler called";
-         }
-      } else {
-         ready_ = ((pmap_[pdrs.device_id][pdrs.qid]==1) && 
-                   (pmap_[pdrs.device_id][pdrs.qid-1]==1));
-         if (ready_) {
-            vtb::details() << "Port Controller Loopback: Odd Queues ready: "
-               << pdrs.qid-1 << ":"<< pdrs.qid;
-            vtb::info() << "Port Controller Loopback: Odd Handler called";
-           port_handler_[pdrs.device_id]->start(); 
-         }
-      }
-   } else {
-      pmap_[pdrs.device_id].resize(8*2, -1); // init each element to -1
-      pmap_[pdrs.device_id][pdrs.qid] = pdrs.enable;
-   }
-}
-
 void PortControllerLoopback::epoll_worker() {
    while (is_running_) {
       int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
@@ -98,6 +63,42 @@ void PortControllerLoopback::epoll_worker() {
             }
          }
       }
+   }
+}
+
+void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
+   vtb::info() << "Port Controller Loopback: Received:"
+               << "  device_id: " << pdrs.device_id
+               << "  qid: " << pdrs.qid
+               << "  enable: " << pdrs.enable;
+
+   auto it = pmap_.find(pdrs.device_id);
+
+   if (it != pmap_.end()) { // device exists
+      pmap_[pdrs.device_id][pdrs.qid] = pdrs.enable;
+
+      if (vtb::is_even(pdrs.qid)) {
+         ready_ = ((pmap_[pdrs.device_id][pdrs.qid]==1) &&
+                   (pmap_[pdrs.device_id][pdrs.qid+1]==1));
+         if (ready_) {
+            vtb::details() << "Port Controller Loopback: Even Queues ready: " 
+               << pdrs.qid << ":"<< pdrs.qid+1;
+            vtb::info() << "Port Controller Loopback: Even Handler called";
+         }
+      } else {
+         ready_ = ((pmap_[pdrs.device_id][pdrs.qid]==1) && 
+                   (pmap_[pdrs.device_id][pdrs.qid-1]==1));
+         if (ready_) {
+            vtb::details() << "Port Controller Loopback: Odd Queues ready: "
+               << pdrs.qid-1 << ":"<< pdrs.qid;
+            vtb::info() << "Port Controller Loopback: Odd Handler called";
+            port_handler_[pdrs.device_id]->vid = pdrs.device_id;
+            port_handler_[pdrs.device_id]->start(); 
+         }
+      }
+   } else {
+      pmap_[pdrs.device_id].resize(8*2, -1); // init each element to -1
+      pmap_[pdrs.device_id][pdrs.qid] = pdrs.enable;
    }
 }
 

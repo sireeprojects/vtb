@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <unistd.h>
 #include "messenger.h"
+#include "config_manager.h"
 
 namespace vtb {
 
@@ -54,6 +55,10 @@ protected:
 
    std::atomic<bool> is_running_{false};
 
+   int vid{-1};
+   int rxqid{-1};
+   int txqid{-1};
+
    // used in two thread model only
    // used in both loopback/back2back model
    std::thread tx_thread_;
@@ -73,7 +78,7 @@ protected:
 
    // used in single/two thread model
    // used in loopback only
-   struct rte_ring *tx_rx_ring_;
+   // struct rte_ring *tx_rx_ring_;
 
    // statistics counters
    uint64_t tx_pkt_cnt_{0};

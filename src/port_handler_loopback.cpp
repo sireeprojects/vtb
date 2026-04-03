@@ -17,7 +17,34 @@ PortHandlerLoopback::~PortHandlerLoopback() {
 void PortHandlerLoopback::start() {
 
    vtb::info() << "Starting thread";
+   // start the appropriate port controller
+   auto mode = vtb::ConfigManager::get_instance().get_arg<std::string>("--mode");
+   auto nof_threads = vtb::ConfigManager::get_instance().get_arg<int>("--mode-threads");
    return;
+
+   if (mode=="Local") {
+      if (nof_threads == 1) {
+         // make sure vid, txqid and rxqid is assigned to proper values
+         // create tx_ring_
+         // assign tx_ring_ to rx_ring_
+         // create tx_mbuf_pool_
+         // create rx_mbuf_pool_
+         // start tx_rx_thread_
+         //       tx_rx_worker should be implemented
+      }
+      else if (nof_threads == 2) {
+         // make sure vid, txqid and rxqid is assigned to proper values
+         // create tx_ring_
+         // assign tx_ring_ to rx_ring_
+         // create tx_mbuf_pool_
+         // create rx_mbuf_pool_
+         // start tx_thread_
+         //       tx_worker should be implemented
+         // start rx_thread_
+         //       rx_worker should be implemented
+      }
+   }
+
 
    // create tx_mbuf_pool_
    vtb::info() << "PortHandlerLoopback: Creating Transmit MBUF Pool";
@@ -41,15 +68,6 @@ void PortHandlerLoopback::start() {
    if (!rx_mbuf_pool_)
       throw std::runtime_error("cannot create rx mbuf pool");
    
-   // create tx_rx_ring_
-   vtb::info() << "PortHandlerLoopback: Creating Loopback ring";
-   tx_rx_ring_ = rte_ring_create("VLOOP_RING",
-                    RING_SIZE,
-                    rte_socket_id(),
-                    RING_F_SP_ENQ | RING_F_SC_DEQ);
-   if (!tx_rx_ring_)
-      throw std::runtime_error("cannot create inter-thread ring");
-
    tx_thread_ = std::thread(&PortHandlerLoopback::tx_worker, this);
    rx_thread_ = std::thread(&PortHandlerLoopback::rx_worker, this);
    // tx_thread_.detach(); // CHECK
