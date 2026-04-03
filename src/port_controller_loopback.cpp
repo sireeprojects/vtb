@@ -92,7 +92,9 @@ void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
             vtb::details() << "Port Controller Loopback: Odd Queues ready: "
                << pdrs.qid-1 << ":"<< pdrs.qid;
             vtb::info() << "Port Controller Loopback: Odd Handler called";
-            port_handler_[pdrs.device_id]->vid = pdrs.device_id;
+            port_handler_[pdrs.device_id]->set_vid(pdrs.device_id);
+            port_handler_[pdrs.device_id]->set_rxqid(pdrs.qid-1);
+            port_handler_[pdrs.device_id]->set_txqid(pdrs.qid);
             port_handler_[pdrs.device_id]->start(); 
          }
       }

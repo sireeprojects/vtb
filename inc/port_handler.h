@@ -31,6 +31,10 @@ public:
    // Signals both threads to stop.
    void stop();
 
+   void set_vid(int v) {vid = v;}
+   void set_rxqid(int id) {rxqid = id;}
+   void set_txqid(int id) {txqid = id;}
+
 protected:
    // TX pipeline — called in sequence by the transmit thread
    virtual void dequeue_tx_packets() = 0;

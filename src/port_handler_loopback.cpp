@@ -16,7 +16,11 @@ PortHandlerLoopback::~PortHandlerLoopback() {
 
 void PortHandlerLoopback::start() {
 
-   vtb::info() << "Starting thread";
+   vtb::info() << "Starting thread"
+               <<  " VID: " << vid
+               <<  " RXQ: " << rxqid
+               <<  " TXQ: " << txqid;
+
    // start the appropriate port controller
    auto mode = vtb::ConfigManager::get_instance().get_arg<std::string>("--mode");
    auto nof_threads = vtb::ConfigManager::get_instance().get_arg<int>("--mode-threads");

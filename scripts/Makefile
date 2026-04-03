@@ -3,7 +3,7 @@ CXX      := g++
 CXXFLAGS := -I../inc -Wall -Wextra -std=c++17 `pkg-config --cflags libdpdk`
 LDFLAGS  :=  `pkg-config --libs libdpdk` -pthread
 
-PROJ_ROOT = /root/vtb
+PROJ_ROOT = ..
 
 # Directories
 SRC_DIR  := $(PROJ_ROOT)/src
