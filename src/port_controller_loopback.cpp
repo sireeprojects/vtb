@@ -68,9 +68,16 @@ void PortControllerLoopback::epoll_worker() {
 
 void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
    vtb::info() << "Port Controller Loopback: Received:"
+               << "  meta: " << pdrs.meta
                << "  device_id: " << pdrs.device_id
                << "  qid: " << pdrs.qid
                << "  enable: " << pdrs.enable;
+
+   if (pdrs.meta == 1) {
+      for (int id=0; id<=8; id++)
+         port_handler_[id]->stop(); 
+      return;
+   }
 
    auto it = pmap_.find(pdrs.device_id);
 
@@ -91,11 +98,16 @@ void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
          if (ready_) {
             vtb::details() << "Port Controller Loopback: Odd Queues ready: "
                << pdrs.qid-1 << ":"<< pdrs.qid;
-            vtb::info() << "Port Controller Loopback: Odd Handler called";
-            port_handler_[pdrs.device_id]->set_vid(pdrs.device_id);
-            port_handler_[pdrs.device_id]->set_rxqid(pdrs.qid-1);
-            port_handler_[pdrs.device_id]->set_txqid(pdrs.qid);
-            port_handler_[pdrs.device_id]->start(); 
+            vtb::info() << "Port Controller Loopback: Odd Handler called: " << pdrs.qid/2;
+            port_handler_[pdrs.qid/2]->set_vid(pdrs.device_id);
+            port_handler_[pdrs.qid/2]->set_rxqid(pdrs.qid-1);
+            port_handler_[pdrs.qid/2]->set_txqid(pdrs.qid);
+            port_handler_[pdrs.qid/2]->start(); 
+
+            //port_handler_[pdrs.device_id]->set_vid(pdrs.device_id);
+            //port_handler_[pdrs.device_id]->set_rxqid(pdrs.qid-1);
+            //port_handler_[pdrs.device_id]->set_txqid(pdrs.qid);
+            //port_handler_[pdrs.device_id]->start(); 
          }
       }
    } else {

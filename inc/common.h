@@ -52,6 +52,7 @@ struct PortDeviceEnables {
 };
 
 struct PortDeviceRingState {
+   int meta;
    int port_id;
    int device_id;
    int qid;

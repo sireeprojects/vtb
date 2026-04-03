@@ -46,6 +46,7 @@ run:
 		--log-level=lib.eal:3 \
 		-- --help \
 		--mode Loopback \
+		--mode-threads 1 \
 		--abstract_sockname absockname \
 		--port_data_sockname datasockname \
 		--port_control_sockname controlsockname \

@@ -37,8 +37,8 @@ int main(int argc, char** argv) {
    std::signal(SIGTERM, signal_handler);
 
    // setup logger
-   // vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::DEFAULT);
-   vtb::Logger::get_instance().init("vtb_run.log", vtb::LogLevel::FULL);
+   // vtb::Logger::get_instance().init("run.log", vtb::LogLevel::DEFAULT);
+   vtb::Logger::get_instance().init("run.log", vtb::LogLevel::FULL);
 
    std::set_terminate(my_graceful_exit);
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
    rte_eal_remote_launch(keep_alive, NULL, 2);
    rte_eal_mp_wait_lcore();
 
-   config.print_portmap();
+   // config.print_portmap();
 
    vtb::restore_echoctl();
 

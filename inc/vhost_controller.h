@@ -49,7 +49,7 @@ private:
    static int cb_vring_state_changed(int vid, uint16_t queue_id, int enable);
 
    void create_client();
-   bool notify_port_controller(int vid, uint16_t queue_id, int enable);
+   bool notify_port_controller(int meta, int vid, uint16_t queue_id, int enable);
 
    std::string socket_path_{};
    bool eal_initialised_{false};

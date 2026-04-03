@@ -138,12 +138,13 @@ void VhostController::on_new_device(int vid) {
    vtb::ConfigManager::get_instance().set_queue_state(vid, 1, 1);
 
    VhostController::port_cntr_++; // CHECK
-   notify_port_controller(vid, 0, 1);
-   notify_port_controller(vid, 1, 1);
+   notify_port_controller(0, vid, 0, 1);
+   notify_port_controller(0, vid, 1, 1);
 }
 
 void VhostController::on_destroy_device(int vid) {
    vtb::info() << "Vhost Controller: Device with VID: " << vid << " removed";
+   notify_port_controller(1, vid, 0, 0);
    vtb::ConfigManager::get_instance().clear_device(vid);
 }
 
@@ -155,7 +156,7 @@ void VhostController::on_vring_state_changed(int vid, uint16_t queue_id,
    vtb::ConfigManager::get_instance().set_queue_state(vid, queue_id, enable);
 
    if (queue_id >= 2) // 0 & 1 will be taken care by the notify in new device
-      notify_port_controller(vid, queue_id, enable);
+      notify_port_controller(0, vid, queue_id, enable);
 }
 
 void VhostController::create_client() {
@@ -171,11 +172,11 @@ void VhostController::create_client() {
    abstract_fd_ = vtb::create_client_socket(sock_path);
 }
 
-bool VhostController::notify_port_controller(int vid, uint16_t queue_id,
+bool VhostController::notify_port_controller(int meta, int vid, uint16_t queue_id,
                                              int enable) {
    std::lock_guard<std::mutex> lock(notify_mutex_);
    if (mode_ == "Loopback" || mode_ == "Back2Back") {
-      PortDeviceRingState pdrs = {port_cntr_, vid, queue_id, enable};
+      PortDeviceRingState pdrs = {meta, port_cntr_, vid, queue_id, enable};
       vtb::send_packet(abstract_fd_, pdrs);
    }
    return false;
