@@ -5,6 +5,10 @@ namespace vtb {
 PortController::PortController() : is_running_(false) {
    // port_handler_ = 
       // std::make_unique<vtb::PortHandlerLoopback>();
+ 
+   for (size_t i = 0; i<port_handler_.size(); i++) {
+       port_handler_[i] = std::make_unique<vtb::PortHandlerLoopback>();
+   }
 }
 
 PortController::~PortController() {

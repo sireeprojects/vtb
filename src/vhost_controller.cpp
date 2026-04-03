@@ -133,7 +133,7 @@ void VhostController::on_new_device(int vid) {
                   << VhostController::port_cntr_;
 
    vtb::ConfigManager::get_instance().init_vhost_device(
-       VhostController::port_cntr_, vid, (vring_count / 2));
+         VhostController::port_cntr_, vid, (vring_count / 2));
    vtb::ConfigManager::get_instance().set_queue_state(vid, 0, 1);
    vtb::ConfigManager::get_instance().set_queue_state(vid, 1, 1);
 
@@ -151,6 +151,7 @@ void VhostController::on_vring_state_changed(int vid, uint16_t queue_id,
                                              int enable) {
    vtb::details() << "Vhost Controller: vring state changed vid=" << vid
                   << " queue_id=" << queue_id << " enable=" << enable;
+
    vtb::ConfigManager::get_instance().set_queue_state(vid, queue_id, enable);
 
    if (queue_id >= 2) // 0 & 1 will be taken care by the notify in new device

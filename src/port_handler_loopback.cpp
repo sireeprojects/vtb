@@ -15,6 +15,10 @@ PortHandlerLoopback::~PortHandlerLoopback() {
 }
 
 void PortHandlerLoopback::start() {
+
+   vtb::info() << "Starting thread";
+   return;
+
    // create tx_mbuf_pool_
    vtb::info() << "PortHandlerLoopback: Creating Transmit MBUF Pool";
    tx_mbuf_pool_ = rte_pktmbuf_pool_create("TX_MBUF_POOL",
