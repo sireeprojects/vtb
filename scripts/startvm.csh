@@ -17,13 +17,15 @@ qemu-system-x86_64 \
     -device virtio-vga \
     -vnc :1 \
     \
+   -serial telnet:127.0.0.1:9900,server,nowait \
+    \
     -chardev qemu-vdagent,id=ch1,name=vdagent,clipboard=on \
     -device virtio-serial-pci \
     -device virtserialport,chardev=ch1,id=ch1,name=com.redhat.spice.0 \
     \
     -chardev socket,id=char1,path=/tmp/vhost-user.sock \
-    -netdev type=vhost-user,id=hostnet1,chardev=char1,vhostforce=on \
-    -device virtio-net-pci,netdev=hostnet1,id=net1,mac="00:60:2f:00:00:02",bus=pci.0,addr=0x7;
+    -netdev type=vhost-user,id=hostnet1,queues=4,chardev=char1,vhostforce=on \
+    -device virtio-net-pci,netdev=hostnet1,mq=on,id=net1,mac="00:60:2f:00:00:02",bus=pci.0,addr=0x7;
 
 
 
