@@ -25,13 +25,13 @@ static volatile bool force_quit = false;
 static void signal_handler(int signum) {
    (void)signum;
    force_quit = true;
-      // sleep(5);
-      rte_eth_dev_rx_queue_stop(0,0);
-      rte_eth_dev_tx_queue_stop(0,0);
-      rte_eth_dev_stop(0);
+   // sleep(5);
+   // rte_eth_dev_rx_queue_stop(0,0);
+   // rte_eth_dev_tx_queue_stop(0,0);
+   // rte_eth_dev_stop(0);
 }
 
-static constexpr int num_ports = 1;
+static constexpr int num_ports = 8;
 
 class CustomFrontend {
 public:

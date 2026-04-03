@@ -27,7 +27,7 @@ PortHandler::~PortHandler() {
    if (rx_thread_.joinable())
       rx_thread_.join();
    if (tx_rx_thread_.joinable())
-      rx_thread_.join();
+      tx_rx_thread_.join();
 }
 
 void PortHandler::stop() {

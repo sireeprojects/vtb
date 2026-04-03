@@ -42,8 +42,8 @@ clean:
 
 run:
 	@./vtb_app -l 1-2 --file-prefix=vhost_backend --no-pci --no-telemetry \
-		--log-level=lib.vhost.config:8 \
-		--log-level=lib.eal:8 \
+		--log-level=lib.vhost.config:3 \
+		--log-level=lib.eal:3 \
 		-- --help \
 		--mode Loopback \
 		--abstract_sockname absockname \

@@ -7,6 +7,7 @@
 #include "messenger.h"
 #include "port_handler.h"
 #include "port_handler_loopback.h"
+#include <array>
 
 namespace vtb {
 
@@ -27,7 +28,8 @@ protected:
    std::atomic<bool> is_running_;
    std::thread worker_;
 
-   std::unique_ptr<vtb::PortHandler> port_handler_;
+   // std::unique_ptr<vtb::PortHandler> port_handler_;
+   std::array<std::unique_ptr<vtb::PortHandler>, 8> port_handler_; // TODO harcoded value
 };
 
 }  // namespace vtb

@@ -242,4 +242,27 @@ std::tuple<int, uint16_t, uint16_t> ConfigManager::get_vhost_qids(int port_id,
    return {vd.vid, rxq, txq};
 }
 
+bool ConfigManager::is_queue_ready(int vid, int qpid) {
+   auto it = pmap_.find(vid);
+   if (it == pmap_.end()) {
+      return false;
+   }
+   const VhostDevice& vd = it->second.vd;
+
+   if (vd.qp[qpid].rxq_enabled && vd.qp[qpid].rxq_enabled) {
+      return true;
+   }
+   return false;
+}
+
+void ConfigManager::clear_device(int vid) {
+   size_t deleted_count = pmap_.erase(vid);
+
+   if (deleted_count == 0) {
+      vtb::error() << "Device Id: " << vid << " was not found in PortMap";
+   } else {
+      vtb::details() << "Device Id: " << vid << " is remove from PortMap";
+   }
+}
+
 }  // namespace vtb

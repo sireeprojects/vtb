@@ -3,8 +3,8 @@
 namespace vtb {
 
 PortController::PortController() : is_running_(false) {
-   port_handler_ = 
-      std::make_unique<vtb::PortHandlerLoopback>();
+   // port_handler_ = 
+      // std::make_unique<vtb::PortHandlerLoopback>();
 }
 
 PortController::~PortController() {

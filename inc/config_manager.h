@@ -55,6 +55,9 @@ public:
    void assign_port_control_socket(int port_id, int ctl_fd);
    std::tuple<int, uint16_t, uint16_t> get_vhost_qids(int port_id, int q_num);
 
+   bool is_queue_ready(int vid, int qpid);
+   void clear_device(int vid);
+
 private:
    ConfigManager();
    ~ConfigManager();
