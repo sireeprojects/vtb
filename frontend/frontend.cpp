@@ -31,7 +31,7 @@ static void signal_handler(int signum) {
    // rte_eth_dev_stop(0);
 }
 
-static constexpr int num_ports = 1;
+static constexpr int num_ports = 2;
 
 class CustomFrontend {
 public:
@@ -114,6 +114,7 @@ public:
          // Throttle slightly to keep logs readable; remove for max performance
          rte_delay_us(500000);
       }
+      // rte_eal_cleanup();
    }
 
 private:

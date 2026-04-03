@@ -245,19 +245,23 @@ std::tuple<int, uint16_t, uint16_t> ConfigManager::get_vhost_qids(int port_id,
 }
 
 bool ConfigManager::is_queue_ready(int vid, int qpid) {
+   std::lock_guard<std::mutex> lock(pmap_mutex_);
+
    auto it = pmap_.find(vid);
    if (it == pmap_.end()) {
       return false;
    }
    const VhostDevice& vd = it->second.vd;
 
-   if (vd.qp[qpid].rxq_enabled && vd.qp[qpid].rxq_enabled) {
+   if (vd.qp[qpid].rxq_enabled && vd.qp[qpid].txq_enabled) {
       return true;
    }
    return false;
 }
 
 void ConfigManager::clear_device(int vid) {
+   std::lock_guard<std::mutex> lock(pmap_mutex_);
+
    size_t deleted_count = pmap_.erase(vid);
 
    if (deleted_count == 0) {

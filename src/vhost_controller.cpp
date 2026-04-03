@@ -137,9 +137,9 @@ void VhostController::on_new_device(int vid) {
    vtb::ConfigManager::get_instance().set_queue_state(vid, 0, 1);
    vtb::ConfigManager::get_instance().set_queue_state(vid, 1, 1);
 
-   VhostController::port_cntr_++; // CHECK
    notify_port_controller(0, vid, 0, 1);
    notify_port_controller(0, vid, 1, 1);
+   VhostController::port_cntr_++;
 }
 
 void VhostController::on_destroy_device(int vid) {

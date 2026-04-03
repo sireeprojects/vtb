@@ -67,10 +67,12 @@ int main(int argc, char** argv) {
    rte_eal_mp_wait_lcore();
 
    // config.print_portmap();
+   port_controller.reset();
 
    vtb::restore_echoctl();
 
-   rte_eal_cleanup();
+   // rte_eal_cleanup(); // create drouble free issue when trying to cleanup 
+                         // in class desctructors 
 
    vtb::info() << "Test Done. Starting cleanup...";
    return 0;

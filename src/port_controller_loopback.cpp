@@ -74,7 +74,7 @@ void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
                << "  enable: " << pdrs.enable;
 
    if (pdrs.meta == 1) {
-      for (int id=0; id<=8; id++)
+      for (int id=0; id<8; id++) // TODO raw value 8
          port_handler_[id]->stop(); 
       return;
    }
@@ -102,7 +102,12 @@ void PortControllerLoopback::process_notification(PortDeviceRingState pdrs) {
             port_handler_[pdrs.qid/2]->set_vid(pdrs.device_id);
             port_handler_[pdrs.qid/2]->set_rxqid(pdrs.qid-1);
             port_handler_[pdrs.qid/2]->set_txqid(pdrs.qid);
-            port_handler_[pdrs.qid/2]->start(); 
+
+            try {
+               port_handler_[pdrs.qid/2]->start(); 
+            } catch (const std::exception& e) {
+               vtb::error() << "PortHandler start failed: " << e.what();
+            }
 
             //port_handler_[pdrs.device_id]->set_vid(pdrs.device_id);
             //port_handler_[pdrs.device_id]->set_rxqid(pdrs.qid-1);
