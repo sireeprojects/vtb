@@ -70,6 +70,8 @@ int main(int argc, char** argv) {
 
    vtb::restore_echoctl();
 
+   rte_eal_cleanup();
+
    vtb::info() << "Test Done. Starting cleanup...";
    return 0;
 }
