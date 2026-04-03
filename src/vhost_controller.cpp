@@ -144,6 +144,7 @@ void VhostController::on_new_device(int vid) {
 
 void VhostController::on_destroy_device(int vid) {
    vtb::info() << "Vhost Controller: Device with VID: " << vid << " removed";
+   vtb::ConfigManager::get_instance().clear_device(vid);
 }
 
 void VhostController::on_vring_state_changed(int vid, uint16_t queue_id,
